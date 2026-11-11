@@ -14,7 +14,8 @@
 - ❌ Không tạo / sửa / xoá / đổi tên bất kỳ file nào trong `shared/`.
 - ❌ Không chạy `git commit`, `git checkout`, `git reset`, `git stash`… bên trong `shared/posecoach`.
 - ❌ Không chạy script / build tool trong `shared/` làm sinh file ra đó.
-- ✅ Chỉ được: đọc file, `git log` / `git show` / `git diff` để xem lịch sử.
+- ✅ Chỉ được: đọc file, `git log` / `git show` / `git diff` để xem lịch sử. Đọc bằng `cat` / `grep` / `awk` —
+  `sed` (kể cả `sed -n`) bị luật chặn ghi `shared/**` chặn luôn.
 - ✅ Kéo bản Android mới **chỉ khi người dùng yêu cầu**: `git submodule update --remote shared/posecoach`
   (thao tác này chỉ đổi con trỏ commit ở repo iOS, không sửa nội dung submodule).
 - Cần tài nguyên từ shared (vd. `pose_landmarker_full.task`, ảnh mẫu) → **chép sang
@@ -30,13 +31,16 @@ không bị chặn — vẫn phải tự giữ quy tắc này.
 
 Theo thứ tự, trước khi động vào code:
 
-1. `shared/posecoach/TONG_QUAN_DU_AN.md` — điểm vào duy nhất: sản phẩm, thuật toán, quyết định đã chốt.
+1. `docs/PLAN_PORT_IOS.md` — kế hoạch, tiến độ, và mục **"Nguồn sự thật"**: khi tài liệu Android nói khác code,
+   **code Kotlin thắng** (plan có bảng các chỗ lệch đã biết).
 2. `shared/posecoach/CLAUDE.md` — mục **"THÔNG TIN DỰ ÁN — PoseCoach"**: hiện trạng bản Android,
    ràng buộc cứng, quy tắc riêng. ⚠️ Đọc `CLAUDE.md`, **không** đọc `AGENTS.md` trong shared —
    bản `AGENTS.md` ở đó đã cũ (thiếu các thay đổi từ 05/09/2026).
-3. `shared/posecoach/NGUONG_VA_GOC_QUY_CHIEU.md` — ngưỡng và gốc quy chiếu.
-4. `shared/posecoach/FOOTGUNS.md` — bẫy đã gặp bên Android (nhiều mục áp dụng cả iOS: MediaPipe,
-   EXIF, gương/camera trước…). Chỉ đọc để tham khảo.
+3. `shared/posecoach/THAY_DOI_NHANH_THUAT_TOAN.md` — mô tả hành vi gần code nhất.
+4. `shared/posecoach/FOOTGUNS.md` — bẫy đã gặp bên Android (nhiều mục áp dụng cả iOS). Plan ghi số mục cần đọc cho
+   từng bước port.
+5. `shared/posecoach/TONG_QUAN_DU_AN.md`, `NGUONG_VA_GOC_QUY_CHIEU.md` — đọc để hiểu **mục đích và lý do** thiết kế.
+   ⚠️ Nhiều thuật toán / ngưỡng / thứ tự trong hai file này **đã lỗi thời** so với code.
 
 Tài liệu Android nhắc tới `legacy-ios/` (code Swift cũ) — **thư mục đó không có trong repo này**.
 Đừng đi tìm; nguồn để port là code Kotlin trong `shared/posecoach/app/app/src/main/java/com/example/posecoach/`.
@@ -51,7 +55,8 @@ Android là bản tham chiếu. iOS **viết lại theo code Kotlin**, giữ đ�
   Không "cải tiến" trong lúc port — mọi khác biệt làm mất khả năng đối chiếu khi kết quả sai.
   Muốn đổi thuật toán → đề xuất cho người dùng, việc đó phải làm bên Android trước.
 - Giao diện, camera, cảm biến, lưu trữ: viết theo cách tự nhiên của iOS (không dịch Compose sang SwiftUI từng dòng).
-- Port từng gói theo thứ tự tầng: đo đạc → hướng dẫn → giao diện (xem "Trình tự xây" trong `shared/posecoach/CLAUDE.md`).
+- **Kế hoạch, thứ tự, tiến độ: `docs/PLAN_PORT_IOS.md`.** Đọc bảng Trạng thái trước khi làm; xong bước nào cập nhật bước đó.
+  Port theo thứ tự tầng: đo đạc → hướng dẫn → services → giao diện.
 - Mỗi bước có điểm dừng xin duyệt — không tự code xuyên nhiều bước.
 
 ### Ràng buộc cứng (chi tiết ở `shared/posecoach/CLAUDE.md`, nhắc lại vì hay sai)
@@ -79,6 +84,7 @@ Android là bản tham chiếu. iOS **viết lại theo code Kotlin**, giữ đ�
 | Camera | **AVFoundation** | |
 | Cảm biến | **CoreMotion** (gravity + gyro) | Tương đương `TYPE_GRAVITY` + `TYPE_GYROSCOPE` bên Android |
 | Góc mặt / nhãn ảnh | **ML Kit** `GoogleMLKit/FaceDetection` + `GoogleMLKit/ImageLabeling` 8.0.0 | Cùng engine với Android (`mlkit-face-detection`, `mlkit-image-labeling`) |
+| Góc máy từ nền ảnh (GeoCalib) | ⏸ **Chờ chốt D2**: `onnxruntime-objc` 1.30.0 (cùng version `onnxruntime-android`) | Model `geocalib-mang-int8.onnx` đọc thẳng từ `shared/` |
 | Đa ngôn ngữ | **String Catalog** (`Localizable.xcstrings`), tiếng Anh mặc định + tiếng Việt | Không viết chữ hiển thị thẳng vào code. Tầng logic trả mã câu + số liệu, View mới đổi ra chữ |
 | Backend | **Không có** — offline hoàn toàn | Không tự thêm |
 | Quản lý thư viện | **CocoaPods cho thư viện Google** (MediaPipe, ML Kit) · **SPM** cho phần còn lại (hiện chỉ có local package `PoseDomain`) | ❌ **Không dùng MediaPipe qua SPM**: SPM chỉ có từ 1.1.0 (lệch Android) và do `unsafeFlags` chỉ ghim được theo commit. Ghim **đúng version** trong `PoseCoach/Podfile`. Luôn mở / build bằng **`PoseCoach.xcworkspace`**, không dùng `.xcodeproj`. `Pods/` không commit; sau khi clone chạy `pod install` trong `PoseCoach/` |
@@ -131,7 +137,11 @@ PoseCoach/
 │       │   ├── Measure/             PoseMeasurement (hàm đo DUY NHẤT), ShotScore, MocLuoi
 │       │   ├── Guidance/            GuidanceConfig (chỗ DUY NHẤT chứa ngưỡng), CriterionGate, CuePresenter, GuidanceEngine…
 │       │   ├── Template/            TemplateGate, TemplateProfile…
-│       │   └── Shot/                BestShotBuffer, ShotSession
+│       │   ├── Shot/                BestShotBuffer, TiLeKhung
+│       │   ├── Text/                UiText (chỉ dữ liệu: key + tham số; đổi ra chữ ở app)
+│       │   ├── Face/                FaceInfo
+│       │   ├── Scene/               SceneMatch, SceneVocabulary
+│       │   └── GeoCalib/            GiaiPhoiCanh (phần toán; chạy model ở Services/GeoCalib)
 │       └── Tests/PoseDomainTests/   Swift Testing, cấu trúc giống Sources/PoseDomain/
 ├── PoseCoachTests/          test cần app (service, tích hợp) — chạy trên My Mac / iPhone thật
 ├── PoseCoachUITests/        UI test — chỉ iPhone thật
@@ -163,7 +173,8 @@ Chỉ ghi các gói không đi thẳng 1-1 (còn lại: `home/` → `Features/Ho
 | Kotlin | iOS |
 |---|---|
 | `pose/` | Hình học → `PoseDomain/Pose` · bọc MediaPipe (`PoseDetector`, `StillPoseAnalyzer`, `VideoPoseAnalyzer`, `MediaPipeGuard`) → `Services/PoseLandmarker` |
-| `capture/` | Màn hình + overlay → `Features/Capture` · `BestShotBuffer`, `ShotSession` → `PoseDomain/Shot` · `ShotStore`, `Sharpness` → `Services/Media` |
+| `capture/` | Màn hình, overlay, `ShotSession` (cầm ảnh + kho file) → `Features/Capture` · `BestShotBuffer`, `TiLeKhung` → `PoseDomain/Shot` · `ShotStore`, `Sharpness` → `Services/Media` |
+| File trộn logic + framework | Tách: `FaceInfo` (từ `FaceAnalyzer.kt`), phần đọc tên file của `MediaLibrary.kt`, `groupRows` (từ `GuidanceOverlay.kt`), phần dữ liệu `UiText` → `PoseDomain`; phần còn lại → `Services/` / app. Chi tiết từng file: `docs/PLAN_PORT_IOS.md` |
 | `camera/` · `sensors/` · `face/` · `geocalib/` · `media/` | `Services/Camera` · `Motion` · `FaceDetection` · `GeoCalib` · `Media` |
 | `core/` | Theo quy tắc 5. `LanguageRepository` có thể không cần — iOS có sẵn ngôn ngữ riêng từng app trong Cài đặt; chốt khi port Settings |
 | `ui/` | `DesignSystem/`. `UiText` → key trong String Catalog |
@@ -224,3 +235,6 @@ Nhiều cách giải → liệt kê ngắn kèm trade-off để dev quyết.
 
 - **Bundle ID** hiện là `com.anhtran.PoseCoach` (mặc định lúc tạo project). Xác nhận định danh
   thật trước khi lên App Store Connect — đổi sau khi phát hành = app mới, mất toàn bộ người dùng.
+- **Ghi công giấy phép CC BY 4.0** cho GeoCalib (cvg, ECCV 2024) và bộ dữ liệu Laval Indoor HDR — bắt buộc trước
+  khi phát hành (plan Phase 5, màn Cài đặt).
+- **Không còn code `⚠️ TẠM` / debug** nào trên màn chụp (plan D7).
