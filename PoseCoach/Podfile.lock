@@ -66,12 +66,18 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - onnxruntime-c (1.30.0)
+  - onnxruntime-objc (1.30.0):
+    - onnxruntime-objc/Core (= 1.30.0)
+  - onnxruntime-objc/Core (1.30.0):
+    - onnxruntime-c (= 1.30.0)
   - PromisesObjC (2.4.1)
 
 DEPENDENCIES:
   - GoogleMLKit/FaceDetection (= 8.0.0)
   - GoogleMLKit/ImageLabeling (= 8.0.0)
   - MediaPipeTasksVision (= 1.0.0)
+  - onnxruntime-objc (= 1.30.0)
 
 SPEC REPOS:
   trunk:
@@ -91,6 +97,8 @@ SPEC REPOS:
     - MLKitVision
     - MLKitVisionKit
     - nanopb
+    - onnxruntime-c
+    - onnxruntime-objc
     - PromisesObjC
 
 SPEC CHECKSUMS:
@@ -110,8 +118,10 @@ SPEC CHECKSUMS:
   MLKitVision: fa8dea9012ac59497c79ddbe9ebf32051047ac4c
   MLKitVisionKit: e8244baf4d19cf7669c65da7907662c402adcb05
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  onnxruntime-c: 36ca0f2cdbc89c6b330ec5287c3faf5ca6ed394d
+  onnxruntime-objc: b5edf18cf57daebe2ee59a7866aab12c8eeff940
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
 
-PODFILE CHECKSUM: f3f4e18c6061c22593b93ccbd5cf4d0ab66ff707
+PODFILE CHECKSUM: fdb76443fe0f4e1f6b6a7f46bc75f8ef8ef7f83c
 
 COCOAPODS: 1.16.2

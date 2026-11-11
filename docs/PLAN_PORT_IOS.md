@@ -20,7 +20,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 
 | Phase | Nội dung | Trạng thái | Ngày |
 |---|---|---|---|
-| 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ⬜ | |
+| 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ⬜ | |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ⬜ | |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
@@ -116,10 +116,10 @@ Phát hiện bẫy mới → thêm dòng.
 | Khung app | `App/App/PoseCoachApp.swift` + `RootView.swift`: 3 tab theo `MainActivity.kt` — **Ảnh mẫu · Thư viện · Cài đặt**. Xoá `ContentView.swift` mẫu |
 
 **Tiêu chí xong:**
-- [ ] Build My Mac xanh; app mở thấy 3 tab rỗng
-- [ ] Test trong `PoseCoachTests`: đọc được model, file onnx, và đủ 114 ảnh mẫu từ bundle (quét đệ quy)
-- [ ] Test: khởi tạo `PoseLandmarker`, `FaceDetector`, `ImageLabeler`, `ORTSession` cùng lúc — log không có `Class … is implemented in both`
-- [ ] `Localizable.xcstrings` đủ 477 + 3 key, mỗi key đủ `en` và `vi`; script chạy lại được khi Android thêm chuỗi
+- [x] Build My Mac xanh; app mở thấy 3 tab rỗng
+- [x] Test trong `PoseCoachTests`: đọc được model, file onnx, và đủ 114 ảnh mẫu từ bundle (quét đệ quy)
+- [x] Test: khởi tạo `PoseLandmarker`, `FaceDetector`, `ImageLabeler`, `ORTSession` cùng lúc — log không có `Class … is implemented in both`
+- [x] `Localizable.xcstrings` đủ 477 + 3 key, mỗi key đủ `en` và `vi`; script chạy lại được khi Android thêm chuỗi
 
 ⏸ **Điểm dừng 0**
 
