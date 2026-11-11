@@ -1,0 +1,5 @@
+[submodule "shared/posecoach"]
+	path = shared/posecoach
+	url = https://github.com/BNNam299/posecoach.git
+	branch = phuong-an-tich-hop
+	shallow = true
