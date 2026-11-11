@@ -1,0 +1,25 @@
+# Uncomment the next line to define a global platform for your project
+platform :ios, '17.0'
+
+target 'PoseCoach' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Nhận diện khung xương — CÙNG VERSION với Android (libs.versions.toml: mediapipeTasksVision = "1.0.0").
+  # Không dùng SPM: SPM chỉ có từ 1.1.0, và buộc ghim theo commit vì unsafeFlags.
+  pod 'MediaPipeTasksVision', '1.0.0'
+
+  # Cùng engine nhận diện mặt và nhãn ảnh với Android.
+  pod 'GoogleMLKit/FaceDetection', '8.0.0'
+  pod 'GoogleMLKit/ImageLabeling', '8.0.0'
+
+  target 'PoseCoachTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+  target 'PoseCoachUITests' do
+    # Pods for testing
+  end
+
+end
