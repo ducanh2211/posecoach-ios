@@ -22,7 +22,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 |---|---|---|---|
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
-| 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ⬜ | |
+| 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | 🔶 2a xong | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
@@ -219,6 +219,17 @@ tham số (`%@` / `%lld` của iOS) phải **cùng quy tắc** với bộ đổi
 `UiTextArg.int` → `%lld`, `.string` / `.text` → `%@`; Android truyền số vào `%s` thì iOS đổi số ra chữ trước.
 
 Thời gian truyền vào bằng tham số (`nowMs`) như test Kotlin — không dùng `Date()` thật.
+
+- [x] Xanh — tổng **144 test** (69 Phase 1 + 75 của 2a) — 12/11/2026 · `grep` import rỗng
+- [x] `TestStrings` đọc `PoseCoach/Resources/Localizable.xcstrings`, ghép tham số theo quy tắc trên: `.int` → `%lld`;
+  `.string` / `.text` → `%@`; số (`.int` / `.double`) vào `%@` thì đổi ra chữ như `toString()` của Kotlin. Ghép sai
+  kiểu (vd. `.string` vào `%lld`) là test đỏ. **4a phải ghép đúng quy tắc này.**
+- `DatMayTest`: 2 dòng đầu (`MediaLibrary.TemplateKind` / `gocMayTheoNhan`) chưa port — thêm lại ở 2b cùng `TemplateKind`.
+- `GuidanceEngine.swift` mới chỉ có hằng số `deviceRollTrustPitchDeg` (`DatMayGate` cần) — máy trạng thái port ở 2b.
+- `PerspectiveTest`: hàm `dev(...)` của Kotlin không bài nào gọi — không port.
+- Làm tròn zoom một chữ số lẻ (`nhanZoom` / `mucZoom`) theo kiểu Java `%.1f` (dạng thập phân ngắn nhất rồi làm tròn
+  nửa lên: 2.25 → "2.3"); `String(format:)` của iOS cho "2.2".
+- Thêm `toRadians` (internal) cạnh `toDegrees` trong `PoseGeometry`.
 
 ⏸ **Điểm dừng 2a**
 

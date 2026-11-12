@@ -318,3 +318,8 @@ public struct Box: Equatable, Sendable {
 func toDegrees(_ angrad: Double) -> Double {
     angrad * (180.0 / Double.pi)
 }
+
+/// Tương đương `Math.toRadians` của Java: `angdeg * DEGREES_TO_RADIANS` với hằng số tính sẵn π/180.
+func toRadians(_ angdeg: Double) -> Double {
+    angdeg * (Double.pi / 180.0)
+}
