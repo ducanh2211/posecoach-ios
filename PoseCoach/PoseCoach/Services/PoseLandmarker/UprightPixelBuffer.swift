@@ -17,11 +17,17 @@ nonisolated final class UprightPixelBuffer {
     private var pool: CVPixelBufferPool?
     private var poolSize = (w: 0, h: 0)
 
-    /// Khung đã dựng đứng. `.up` thì trả nguyên khung, không tốn gì.
-    func upright(_ buffer: CVPixelBuffer, _ orientation: UIImage.Orientation) -> CVPixelBuffer? {
-        if orientation == .up { return buffer }
-        let image = CIImage(cvPixelBuffer: buffer).oriented(CGImagePropertyOrientation(orientation))
-        let w = Int(image.extent.width), h = Int(image.extent.height)
+    /// Khung đã dựng đứng. `.up` và không cần thu nhỏ thì trả nguyên khung, không tốn gì.
+    ///
+    /// - Parameter maxLongSide: thu nhỏ để cạnh dài không quá chừng này điểm ảnh — tương đương độ phân giải mặc định
+    ///   640×480 của `ImageAnalysis` (CameraX). Thu nhỏ cùng lượt với xoay nên không tốn thêm một lần vẽ. `nil` = giữ cỡ.
+    func upright(_ buffer: CVPixelBuffer, _ orientation: UIImage.Orientation, maxLongSide: Int? = nil) -> CVPixelBuffer? {
+        let longSide = max(CVPixelBufferGetWidth(buffer), CVPixelBufferGetHeight(buffer))
+        let scale: CGFloat = maxLongSide.map { longSide > $0 ? CGFloat($0) / CGFloat(longSide) : 1 } ?? 1
+        if orientation == .up && scale == 1 { return buffer }
+        var image = CIImage(cvPixelBuffer: buffer).oriented(CGImagePropertyOrientation(orientation))
+        if scale < 1 { image = image.samplingLinear().transformed(by: CGAffineTransform(scaleX: scale, y: scale)) }
+        let w = Int(image.extent.width.rounded()), h = Int(image.extent.height.rounded())
         guard let out = taoBuffer(w, h) else { return nil }
         context.render(
             image.transformed(by: CGAffineTransform(translationX: -image.extent.minX, y: -image.extent.minY)),

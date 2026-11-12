@@ -135,14 +135,16 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
     /// qua `onResult`.
     ///
     /// - Parameter orientation: hướng hiển thị của khung (theo hướng cầm máy + camera trước/sau) — tầng camera tính.
-    func detect(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation) {
+    /// - Parameter maxLongSide: thu nhỏ khung về cạnh dài này trước khi nhận diện (`nil` = giữ cỡ). Xem
+    ///   `UprightPixelBuffer.upright`.
+    func detect(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation, maxLongSide: Int? = nil) {
         // Kiểm nhanh trước khi làm việc nặng.
         if !isReady { return }
 
         let image: MPImage
         do {
             guard let raw = CMSampleBufferGetImageBuffer(sampleBuffer),
-                  let upright = xoay.upright(raw, orientation)
+                  let upright = xoay.upright(raw, orientation, maxLongSide: maxLongSide)
             else {
                 Self.log.error("Không đọc được khung hình camera")
                 return
@@ -157,7 +159,6 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
         lock.lock()
         defer { lock.unlock() }
         guard let lm = landmarker else { return }
-
 
         // Ép mốc thời gian tăng nghiêm ngặt.
         let now = Self.uptimeMs()

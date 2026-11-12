@@ -23,7 +23,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
-| 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | 🔶 3a xong | 12/11/2026 |
+| 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | 🔶 3a xong · 3b code xong, chờ kiểm iPhone | 12/11/2026 |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
@@ -362,6 +362,34 @@ ra 🔴/🟡/🟢 — lưu bảng kết quả làm mốc cho Phase 6a.
 - [ ] iPhone: khung xương chồng khít ở cầm dọc **và** ngang, camera trước và sau
 - [ ] Burst 8 ảnh đúng hướng; video 3–30 s đúng hướng, xoá được
 - [ ] Dấu `pitch` / `roll` khớp quy ước Android (in số khi ngửa / chúc / vẹo máy)
+- [x] Build xanh; `VideoRecorderTests` (transform xoay/lật video) xanh — 18/18 PoseCoachTests, 261 PoseDomain
+
+**Đã làm (12/11/2026)** — `Services/Camera/CaptureController.swift`, `VideoRecorder.swift`,
+`Services/Motion/DeviceTilt.swift`, `CMMotionManager+Shared.swift`; `UprightPixelBuffer` / `PoseDetector.detect` thêm
+`maxLongSide` (thu về 640 px cùng lượt xoay). Khác Kotlin — cách tự nhiên của AVFoundation, hành vi giữ nguyên:
+- **Một `AVCaptureVideoDataOutput` nuôi cả nhận diện lẫn quay video** (`VideoRecorder` = `AVAssetWriter`, H.264, không
+  tiếng). Luồng giữ **chiều gốc cảm biến** (góc 0°, không lật) suốt phiên — đổi góc giữa lúc quay là đổi cỡ khung, hỏng
+  file. Hướng cầm máy áp ở 3 nơi: nhận diện tự xoay khung (`orientationForAnalysis`), video ghi `preferredTransform`
+  lúc BẮT ĐẦU quay (như `targetRotation` CameraX), ảnh đặt `videoRotationAngle` ngay trước mỗi tấm (FG 95).
+- **Video camera trước lật bằng transform** (lật ngang SAU khi xoay), không lật điểm ảnh → `VideoFrameSource` (3c)
+  **phải áp `preferredTransform`**, kể cả phần lật. Video thô chỉ dùng nội bộ rồi xoá nên không lo trình phát khác.
+- Khung phân tích **không lật** cả với camera trước (như `ImageAnalysis`); tầng trên tự `mirrored()` như Kotlin.
+- Phân tích chạy hàng đợi riêng, đang bận thì bỏ khung (≈ `KEEP_ONLY_LATEST`); ghi video nhận mọi khung.
+- Camera sau chọn thiết bị nhiều ống (triple → dual-wide → dual → wide) để có 0,5x như camera logic CameraX;
+  `zoomRatio` = `videoZoomFactor` / mốc chuyển sang ống chính. Mở camera đặt zoom về 1x (thiết bị nhiều ống mặc định 0,5x).
+- `verticalFovDeg` dùng `activeFormat.videoFieldOfView` (cạnh dài) chia `videoZoomFactor`; tỉ lệ so sánh là tỉ lệ
+  khung ĐANG PHÂN TÍCH (16:9 khi quay khung hẹp — Android phân tích luôn 4:3).
+- Burst: preset `.photo`, `.quality`, JPEG, ghi `burst-%02d.jpg`, nối tiếp, hỏng tấm nào bỏ tấm đó. Video: preset
+  `.inputPriority`, chọn format 1920×1080 / 1440×1080 30 fps, lùi HD.
+- Hướng cầm máy: công thức `OrientationEventListener` (AOSP) từ **gia tốc kế** CoreMotion ở 200 ms, chỉ gọi khi số độ
+  đổi, giữ 400 ms. Gia tốc kế (không phải `deviceMotion.gravity`) vì Android cũng dùng gia tốc kế, và `deviceMotion` đã
+  dành cho `DeviceTilt` (một `CMMotionManager` cho cả app).
+- `stop()`: tắt cảm biến → dừng quay → gỡ delegate → `stopRunning` + gỡ input/output → chờ hai hàng đợi khung chạy hết
+  (FG 11). Lỗi phiên lúc chạy (`runtimeErrorNotification`) báo `camera_err_open`.
+
+**Cần kiểm trên iPhone (chưa đo được trên Mac):** bảng `orientationForAnalysis` cho **camera trước** (giả định
+`videoRotationAngle` cùng nghĩa cho hai camera); `videoFieldOfView` của thiết bị nhiều ống là góc ở `videoZoomFactor` 1
+(ống 0,5x); dấu `pitch` / `roll` của `DeviceTilt`.
 
 ⏸ **Điểm dừng 3b**
 
