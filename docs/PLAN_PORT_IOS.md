@@ -24,7 +24,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
-| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
+| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | 🔶 4a xong | 12/11/2026 |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
 
@@ -485,6 +485,21 @@ Giao diện viết theo SwiftUI, **không dịch Compose từng dòng**; hành v
 | `MainActivity.kt` (điều hướng) | `App/App/RootView.swift` |
 
 Test: `StringsParityTest` → mới trong `PoseCoachTests`: mọi key có `en` + `vi`, **cùng số / kiểu tham số**.
+
+- [x] `StringsParityTests` (2) xanh — đọc bản ĐÃ BIÊN DỊCH (`.strings` + `.stringsdict`), so cả các dạng số nhiều;
+  `UiTextResolveTests` (5). 46/46 PoseCoachTests (12/11/2026)
+
+**Đã làm (12/11/2026)** — khác plan / Kotlin:
+- `GuidanceOverlay.kt` tách theo quy tắc một file một type: `DesignSystem/CriteriaChecklist`, `CriteriaProgress`,
+  `CuePill` (+ `CueTone`), `TemplateCard`. Ở `DesignSystem/` vì Kotlin dùng ở 3 màn (Home, Capture, Scene).
+  `groupRows` đã có ở PoseDomain (2b). Chưa nối vào màn chụp — nối ở 4c.
+- `DesignSystem/Ds.swift` = `DesignTokens.kt` (`Ds`), mã màu chép nguyên qua `Color(argb:)` (`Extensions/Color+Argb`).
+  **Bỏ** `Cues` (câu tiếng Việt viết cứng, Kotlin không dùng) và `PosecoachTheme` / `Color.kt` / `Type.kt` (Material mặc
+  định tím, màn nào cũng tự tô bằng `Ds`).
+- `UiText+Resolve` đã kéo sớm ở 3b. Chữ trong view dùng cỡ cố định như `sp` của Kotlin (chưa theo Dynamic Type).
+- `RootView`: `TabView` của iOS thay ba nút chữ tự vẽ; tab nhớ qua lần dựng lại bằng `@SceneStorage` (= `ScreenSaver`);
+  màn chụp mở `fullScreenCover`, đóng → về tab Ảnh mẫu. Route `Result` thêm ở 4d; nút "Start shooting" tạm vẫn ở tab Ảnh
+  mẫu tới 4b.
 
 ⏸ **Điểm dừng 4a**
 
