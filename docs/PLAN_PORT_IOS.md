@@ -26,7 +26,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ✅ code xong (4a–4d) · 4b, 4c, 4d chờ kiểm iPhone | 12/11/2026 |
 | 5 | Phần phụ — Library, Scene, Settings | ✅ code xong · chờ kiểm iPhone (camera bối cảnh) | 12/11/2026 |
-| 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
+| 6 | Đối chiếu với Android + đo trên máy thật | 🔶 công cụ 6a + số iOS xong · còn lại chờ iPhone (checklist G) + tệp Android (D6) | 12/11/2026 |
 
 Ký hiệu: ⬜ chưa làm · 🔶 đang làm · ✅ xong · ⛔ bị chặn (ghi lý do)
 
@@ -79,7 +79,7 @@ tay che mặt, khoá chủ thể nhiều người, trạng thái `ACQUIRING`.
 | D3 | Máy sàn iOS + mục tiêu hiệu năng | iPhone 11 (A13, theo tài liệu gốc); ≥ 8–10 fps vòng đo, trễ cue < 350 ms | Phase 6 (chốt sớm để có máy) |
 | D4 | Chọn ngôn ngữ trong app hay dùng ngôn ngữ riêng từng app của iOS? | ✅ **Chốt 12/11/2026: của hệ thống** — Settings chỉ có dòng mở Cài đặt, bỏ `LanguageRepository` + `AppLanguageTest` | — |
 | D5 | Thư viện tải ảnh cho lưới ảnh mẫu (Android dùng Coil) | **Không thêm** — ImageIO thumbnail + `NSCache` | Phase 4 |
-| D6 | Dữ liệu đối chiếu từ Android (JSON số đo cho cùng bộ ảnh) | Nhờ bên Android thêm lệnh xuất | Phase 6 |
+| D6 | Dữ liệu đối chiếu từ Android (JSON số đo cho cùng bộ ảnh) | Nhờ bên Android thêm lệnh xuất — **định dạng đã chốt bên iOS: `tools/so-sanh-parity/README.md`** (12/11/2026) | 6a |
 | D7 | Code đánh dấu `⚠️ TẠM` bên Android: GeoCalib chạy trên màn chụp (`CaptureScreen.kt:335`, `CaptureViewModel.kt:212`) + `debugDo` / `debugGocMay` (`CaptureViewModel.kt:388–455`) | **Không port** — tài liệu ghi phải gỡ trước khi phát hành | Phase 4 |
 | D8 | Ngưỡng nằm ngoài `GuidanceConfig` (`NhanDienNhap.kt`: `nhomGoc` ±15°, `CACH_MOC_GOC = 4`, nhãn ML Kit 0,2 / 0,5; hằng số trong `CaptureScreen.kt`) | Port **đúng chỗ Android đặt** để đối chiếu được; ghi danh sách ở bước port | Phase 4 |
 
@@ -693,6 +693,48 @@ Test: `AppLanguageTest` (2) — chỉ port nếu D4 giữ chọn ngôn ngữ tro
 | 6e | Khung cắt từ video / burst có đẹp bằng ảnh chụp thường không | So cạnh nhau |
 | 6f | **Các điểm Android ghi "chưa kiểm trên máy thật"**: dấu roll (FG 112), chiều camera trước khi đặt máy (FG 113), mốc nhãn ML Kit (FG 105), mốc 35°/s (FG 107), `hieuChinhGocAnh` khi ngửa > +15° (FG 87), dấu trái/phải hướng mẫu (`PoseGeometry.kt:289`), sai số góc xoay ở 0° / 45° / 90° và chiều cao mẫu (TONG_QUAN §10.3 số #4, #5) | Bảng đúng / sai |
 | 6g | **Chuẩn nghiệm thu tài liệu gốc:** `Implementation_Guide` §7 G1–G6; `Phan_Lop_Khung_Hinh` §9; `Spike_Brief` Q1 / Q2 / Q4 / Q5 | Bảng đạt / rớt |
+
+Mọi việc cần máy thật / người: `docs/CHECKLIST_KIEM_IPHONE.md` **mục G** (6a trên iPhone, 6b–6g).
+
+**6a — đã làm (12/11/2026):**
+- [x] Định dạng chung + cách chạy: `tools/so-sanh-parity/README.md` (gửi bên Android làm lệnh xuất — D6). Tách hai câu
+  hỏi: **thuật toán** (iOS tính lại TỪ landmark Android → phải trùng tuyệt đối) và **runtime** (mỗi bên chạy trên ảnh).
+- [x] Xuất thô iOS: `PoseCoachTests/Parity/XuatAnhMau6aTests` (chỉ chạy khi có `TEST_RUNNER_XUAT_6A`) → landmark
+  MediaPipe IMAGE, mặt ML Kit, GeoCalib cho 114 ảnh → `docs/moc/6a-ios-anh-mau.json` (My Mac).
+- [x] Tính lại bằng PoseDomain: `PDT/Parity/Parity6aTest` + `PDT/Support/Parity6a.swift` (`PARITY_6A=tệp swift test`)
+  → `docs/moc/6a-ios-anh-mau.tinh-ios.json`. Test thường: qua JSON rồi tính lại trùng từng chữ số; không landmark → đỏ.
+- [x] So: `tools/so-sanh-parity/so_sanh.py` (Python, thư viện chuẩn). Tự so với chính nó = 0 khác biệt; cổng kiểm 109 🟢
+  / 5 🟡 / 0 🔴 khớp mốc 3a.
+- [ ] Chờ tệp Android → chạy hai phép so, ghi kết quả vào đây.
+- ⚠️ **Phát hiện**: ML Kit Face Detection trên My Mac **dao động giữa các lần mở app** (cùng 114 ảnh: 63, 51, 20, 13
+  ảnh thấy mặt; trong một lần chạy thì ổn định; không do thứ tự chạy MediaPipe / GeoCalib — đã thử). Mốc
+  `3c-mat-anh-mau.tsv` (61/114) vì vậy không phải mốc cố định. Ảnh chân dung lấy hướng mẫu từ mặt → **phải kiểm trên
+  iPhone** (checklist G-6a) trước khi kết luận; nếu iPhone cũng dao động thì là lỗi phát hành.
+
+**6b–6f:** quy trình đo ở checklist mục G. Chưa có số.
+
+**6g — chuẩn nghiệm thu, đối chiếu với thiết kế hiện tại** (tài liệu gốc viết cho pipeline Vision cũ — nhiều mục đã
+được code Android thay, xem bảng "Lệch giữa tài liệu và code"):
+
+| Chuẩn | Ngưỡng tài liệu | Còn áp dụng? | Đo ở |
+|---|---|---|---|
+| G1 nhịp vòng đo | pose ≥ 8 fps, trễ cue < 350 ms, không thermal shutdown | Có | 6c |
+| G2 hướng mẫu | ≥ 80% khung đúng bucket 45°; ≤ 1 lần đổi/s; trước/sau ≥ 97% | Một phần — không còn bucket (L12: `atan2` world landmark, không lọc); đo "mục 1 đạt khi mẫu đúng hướng" + trước/sau | 6d |
+| G3 cao/thấp | ≥ 80% đúng bucket ở 5 tầm máy | Có — dung sai 10° mọi lớp (L7) | Checklist G-6g |
+| G4 lớp khoảng cách | ≥ 85% đúng lớp ở 0,8 / 2 / 4 m | Có (`FramingClass`) | Checklist G-6g |
+| G5 end-to-end | ALIGNED ≤ 45 s ở ≥ 7/10; S ≥ 0,88 sau auto-crop | Một phần — **không có auto-crop** (ngoài phạm vi port), điểm 0–100 | Checklist G-6g |
+| G6 stress | suy giảm ≤ 12 điểm % (áo rộng, khoanh tay) | Có | 6d |
+| Phân lớp §9: `visionOrientation` .up/.right | trục X/Y không hoán đổi | Có — iOS là `orientationForAnalysis` | Checklist B |
+| Phân lớp §9: σ cả 5 lớp, accept ≥ 3σ | | Có | 6b |
+| Phân lớp §9: quy tắc lớp trên 30 ảnh mẫu | | Có — lớp của 114 ảnh ở `6a-ios-anh-mau.tinh-ios.json`, **cần người gán tay để so** | PO |
+| Phân lớp §9: rFront 5 người | mặc định 0,62 | **Không** — hướng mẫu không còn dùng `rFront` (L12) | — |
+| Phân lớp §9: interval 0,1 s / 0,2 s | | Đã đổi — `SCORE_STEP_MS = 500` (L21); chỉ đo thời gian chấm | 6c |
+| Phân lớp §9: neo điểm 30 cặp, 5 người chấm | | Có | PO |
+| Spike Q1 khung video/burst vs ảnh thường | ≥ 70% "chấp nhận được" | Có — mặc định là burst 8 ảnh (L17) | 6e |
+| Spike Q2 phân tích sau quay | clip 15 s ≤ 5 s; 20 clip ≤ 15% pin | Có | 6c |
+| Spike Q3 máy chọn trùng gu | ≥ 70% clip | Có — app chỉ giữ 5 ứng viên, cần cách lưu đủ ứng viên khi đo (bàn với PO) | Checklist G-6g |
+| Spike Q4 bộ nhớ | 20 clip ≤ 500 MB sau dọn | Có — xoá video thô / loạt gốc / phiên tạm đã có test (4c, 4d) | Checklist G-6g |
+| Spike Q5 realtime viewfinder | ≥ 10 fps máy sàn, trễ < 300 ms | Có | 6c |
 
 ⏸ **Điểm dừng 6 = hoàn tất port**
 

@@ -117,6 +117,57 @@ Chụp liên tục hoặc quay video như mục D → tự sang màn "Kết qu�
 - [ ] Rời luồng → container `Library/Caches/scene-capture/` **không còn** (đã xoá)
 - [ ] Tab Cài đặt: "Theo ngôn ngữ của máy" mở trang Cài đặt iOS của app; đổi ngôn ngữ ở đó → app ra đúng tiếng
 
+## G. Phase 6 — đo trên máy thật
+
+Làm SAU khi các mục A–F đạt. Máy sàn chưa chốt (D3 — đề xuất iPhone 11); ghi đời máy + iOS vào mỗi kết quả. Số đo
+**chỉ báo cáo** — không tự sửa `GuidanceConfig` (ngưỡng chung hai nền tảng, PO quyết).
+
+### 6a — runtime trên iPhone
+- [ ] Chạy `XuatAnhMau6aTests` trên iPhone (lệnh ở `tools/so-sanh-parity/README.md`, đích là iPhone), tải container
+  lấy `tmp/6a-ios-anh-mau.json` → `docs/moc/6a-ios-iphone.json`
+- [ ] **ML Kit mặt có ổn định không**: chạy 3 lần (mở lại app giữa các lần), so số ảnh có `face` — trên Mac dao động
+  13–63/114. iPhone cũng dao động = lỗi phải điều tra trước khi phát hành (ảnh chân dung lấy hướng mẫu từ mặt)
+
+### 6b — độ nhiễu số đo (σ)
+- [ ] Máy trên chân máy, người đứng yên 20 s, lần lượt **5 lớp** khung hình (toàn thân, 3/4, nửa người, ngực, chân dung).
+  Mở bảng số liệu (bấm dòng trạng thái góc trên trái), quay màn hình 20 s. Ghi σ của từng đại lượng đang đạt/chưa đạt
+  (cao/thấp, xa/gần, trái/phải, hướng mẫu, dáng). So với dung sai `accept` hiện tại: `accept ≥ 3σ` thì ổn
+
+### 6c — hiệu năng (G1, Spike Q2 / Q5)
+- [ ] Màn chụp chạy 5 phút liên tục: "Per frame … ms" ở bảng số liệu (đổi ra fps ≈ 1000 / ms); Xcode → Debug Navigator
+  ghi CPU / nhiệt (Energy Impact). Đạt: **≥ 8 fps**, không bị hệ thống bóp (máy không nóng tới mức tắt camera)
+- [ ] Trễ câu hướng dẫn: quay màn hình 120 fps, di máy đột ngột → đếm khung tới lúc câu đổi. Đạt: **< 350 ms**
+- [ ] Chấm điểm sau quay: video 15 s → thời gian từ lúc dừng tới màn xem lại (Spike Q2: ≤ 5 s); burst 8 tấm
+- [ ] Ghi `thermalState` nếu thấy máy nóng (Implementation_Guide §6 — iOS có, Android không; **chỉ báo, không port**)
+
+### 6d — rủi ro #1: mẫu xoay đủ vòng
+- [ ] Mẫu xoay chậm 360° trước camera (hoặc phát video người xoay trên màn hình khác, KHÔNG tua): khung xương có bám
+  suốt vòng không, hướng mẫu (mục 1) đổi đúng lúc quay lưng / quay mặt. Android: 280/280 khung giữ được. Đếm khung mất
+
+### 6e — ảnh cắt từ video / burst có đẹp bằng ảnh chụp thường (Spike Q1)
+- [ ] Cùng cảnh: quay video → giữ 1 ảnh; chụp liên tục → giữ 1 ảnh; 1 ảnh bằng app Camera của iPhone. Cho 5 người xem mù,
+  hỏi "ảnh nào đăng mạng được". Đạt: ≥ 70% nói ảnh từ app "tương đương / chấp nhận được"
+
+### 6f — các điểm Android ghi "chưa kiểm trên máy thật"
+- [ ] Dấu roll (FG 112): nghiêng máy trái → câu bảo nghiêng ngược lại đúng chiều (trùng mục D)
+- [ ] Chiều camera trước khi đặt máy (FG 113): ảnh mẫu `tripod-…`, máy dựng trên bàn, khung xương không lộn
+- [ ] Mốc nhãn ML Kit (FG 105): nhập 3 ảnh gương (có điện thoại trong ảnh) → tự nhận "gương"; 3 ảnh selfie
+- [ ] 35°/s (FG 107): camera bối cảnh, quay di máy nhanh/chậm — "Chậm lại" hiện đúng lúc nhoè hình (trùng mục F)
+- [ ] `hieuChinhGocAnh` khi ngửa > +15° (FG 87): ảnh mẫu chụp từ dưới lên → câu cao/thấp không đòi hạ máy sai
+- [ ] Dấu trái/phải hướng mẫu (`PoseGeometry.kt:289`): mẫu xoay người sang trái của mẫu → câu bảo xoay đúng chiều
+- [ ] Sai số góc xoay ở 0° / 45° / 90° (TONG_QUAN §10.3 #4) và theo chiều cao mẫu (#5): 2 người khác chiều cao
+
+### 6g — chuẩn nghiệm thu tài liệu gốc
+Bảng đầy đủ + cái nào còn áp dụng: `PLAN_PORT_IOS.md` → Phase 6 → **6g**. Phần cần người / máy:
+- [ ] G2 (hướng mẫu ≥ 80% đúng, trước/sau ≥ 97%) và G6 (lặp lại với áo rộng + khoanh tay, suy giảm ≤ 12 điểm %) — dùng
+  bộ quay của 6d
+- [ ] G3 (cao/thấp ≥ 80% đúng ở 5 tầm máy, 2 người) · G4 (lớp khung hình ≥ 85% đúng ở 0,8 / 2 / 4 m)
+- [ ] G5 (người lạ, 3 ảnh mẫu: góc cao / tựa tường / đứng nghiêng): vào đủ tiêu chí ≤ 45 s ở ≥ 7/10 lần
+- [ ] Spike Q4 (bộ nhớ): 20 lần chụp (10 burst + 10 video), lưu hết → dung lượng app (Cài đặt → Cài đặt chung → Dung
+  lượng iPhone) ≤ 500 MB, `Library/Caches/` gần như trống
+- [ ] Spike Q3 (máy chọn trùng gu người): 20 lần chụp, 5 người tự chọn tấm ưng nhất trong mọi ứng viên → % lần top-5
+  của app chứa tấm đó (≥ 70% đạt) — cần lưu cả ứng viên, bàn với PO cách làm trước
+
 ## Còn treo bên Android (đã báo người dùng, chưa kiểm)
 
 Ô xem trước DỌC khi giao diện ngang, trong khi khung đo cắt NGANG.
