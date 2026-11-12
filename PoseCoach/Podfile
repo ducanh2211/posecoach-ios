@@ -31,4 +31,16 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
     end
   end
+
+  # Test bundle chạy BÊN TRONG app (TEST_HOST) → thư viện đã có sẵn trong app, không được link lần nữa.
+  # MediaPipe ép `-force_load libMediaPipeTasksCommon_*_graph.a` vào MỌI target dùng pod, kể cả test:
+  # link 2 lần thì calculator đăng ký 2 lần → crash "FlowLimiterCalculator already registered".
+  # Giữ search path (để `import` biên dịch được), bỏ cờ link; symbol lấy từ app qua BUNDLE_LOADER.
+  installer.aggregate_targets.select { |t| t.name == 'Pods-PoseCoachTests' }.each do |t|
+    t.user_build_configurations.each_key do |config_name|
+      path = t.xcconfig_path(config_name)
+      lines = File.readlines(path).reject { |l| l.start_with?('OTHER_LDFLAGS') }
+      File.write(path, lines.join + "OTHER_LDFLAGS = $(inherited)\n")
+    end
+  end
 end

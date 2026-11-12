@@ -84,10 +84,10 @@ Android là bản tham chiếu. iOS **viết lại theo code Kotlin**, giữ đ�
 | Camera | **AVFoundation** | |
 | Cảm biến | **CoreMotion** (gravity + gyro) | Tương đương `TYPE_GRAVITY` + `TYPE_GYROSCOPE` bên Android |
 | Góc mặt / nhãn ảnh | **ML Kit** `GoogleMLKit/FaceDetection` + `GoogleMLKit/ImageLabeling` 8.0.0 | Cùng engine với Android (`mlkit-face-detection`, `mlkit-image-labeling`) |
-| Góc máy từ nền ảnh (GeoCalib) | ⏸ **Chờ chốt D2**: `onnxruntime-objc` 1.30.0 (cùng version `onnxruntime-android`) | Model `geocalib-mang-int8.onnx` đọc thẳng từ `shared/` |
+| Góc máy từ nền ảnh (GeoCalib) | **ONNX Runtime** `onnxruntime-objc` **1.30.0** (CocoaPods) | Cùng version `onnxruntime-android` (plan D2) | Model `geocalib-mang-int8.onnx` đọc thẳng từ `shared/` |
 | Đa ngôn ngữ | **String Catalog** (`Localizable.xcstrings`), tiếng Anh mặc định + tiếng Việt | Không viết chữ hiển thị thẳng vào code. Tầng logic trả mã câu + số liệu, View mới đổi ra chữ |
 | Backend | **Không có** — offline hoàn toàn | Không tự thêm |
-| Quản lý thư viện | **CocoaPods cho thư viện Google** (MediaPipe, ML Kit) · **SPM** cho phần còn lại (hiện chỉ có local package `PoseDomain`) | ❌ **Không dùng MediaPipe qua SPM**: SPM chỉ có từ 1.1.0 (lệch Android) và do `unsafeFlags` chỉ ghim được theo commit. Ghim **đúng version** trong `PoseCoach/Podfile`. Luôn mở / build bằng **`PoseCoach.xcworkspace`**, không dùng `.xcodeproj`. `Pods/` không commit; sau khi clone chạy `pod install` trong `PoseCoach/` |
+| Quản lý thư viện | **CocoaPods cho thư viện ML** (MediaPipe, ML Kit, ONNX Runtime) · **SPM** cho phần còn lại (hiện chỉ có local package `PoseDomain`) | ❌ **Không dùng MediaPipe qua SPM**: SPM chỉ có từ 1.1.0 (lệch Android) và do `unsafeFlags` chỉ ghim được theo commit. Ghim **đúng version** trong `PoseCoach/Podfile`. Luôn mở / build bằng **`PoseCoach.xcworkspace`**, không dùng `.xcodeproj`. `Pods/` không commit; sau khi clone chạy `pod install` trong `PoseCoach/` |
 
 **Trước khi thêm bất kỳ dependency nào → hỏi người dùng.** Kiểm repo còn sống / chưa archived trước khi đề xuất.
 
@@ -145,7 +145,7 @@ PoseCoach/
 │       └── Tests/PoseDomainTests/   Swift Testing, cấu trúc giống Sources/PoseDomain/
 ├── PoseCoachTests/          test cần app (service, tích hợp) — chạy trên My Mac / iPhone thật
 ├── PoseCoachUITests/        UI test — chỉ iPhone thật
-├── Podfile                  MediaPipe + ML Kit (ghim đúng version)
+├── Podfile                  MediaPipe + ML Kit + ONNX Runtime (ghim đúng version)
 └── PoseCoach.xcworkspace    LUÔN mở file này
 ```
 
@@ -208,6 +208,19 @@ xcodebuild -workspace PoseCoach.xcworkspace -scheme PoseCoach \
 - Ký app: Personal Team, automatic signing. `-allowProvisioningUpdates` để xcodebuild tự tạo profile.
 - `ENABLE_USER_SCRIPT_SANDBOXING = NO` ở app target là **bắt buộc** — bật lên thì bước nhúng framework của
   CocoaPods bị chặn (`rsync … Operation not permitted`).
+- **Ký app: `DEVELOPMENT_TEAM = S7WPNU5HBB`** (Personal Team trên máy dev). Không commit team khác.
+- `Test crashed with signal kill before establishing connection` trên My Mac = **Gatekeeper chặn** app ký bằng
+  Personal Team (log: `syspolicyd … Gatekeeper rejection`), không phải lỗi code. Chạy test từ terminal/VS Code
+  → app thừa hưởng "nguồn gốc" của tiến trình đó → phải bật nó trong **System Settings → Privacy & Security →
+  Developer Tools** rồi mở lại. Từ Xcode (⌘U) thì không bị. Xem log: `/usr/bin/log show` (zsh có lệnh `log` riêng).
+- **Không để test bundle link lại pod.** MediaPipe ép `-force_load libMediaPipeTasksCommon_*_graph.a` vào mọi
+  target dùng pod → test link bản thứ hai → crash `FlowLimiterCalculator already registered`. `post_install`
+  trong `Podfile` xoá `OTHER_LDFLAGS` của `Pods-PoseCoachTests` — **giữ đoạn đó**; symbol lấy từ app qua `BUNDLE_LOADER`.
+  Ngoại lệ: `onnxruntime_objc` là framework tĩnh, symbol ẩn → test gọi ORT thì tự link bản riêng (vô hại, chỉ khi test).
+- **15 class GTM trùng là đã biết và chấp nhận** (`GTMLog*`, `GTMSessionFetcher*`…): MediaPipe 1.0.0 nhúng sẵn GTM
+  trong graph lib, ML Kit lại kéo pod GTM riêng. Liên kết tĩnh (`:linkage => :static`) đã thử → `1181 duplicate symbols`.
+  Danh sách cho phép nằm trong `testNoDuplicateObjCClasses`; class trùng **mới** vẫn làm test đỏ — điều tra, đừng thêm
+  vào danh sách khi chưa hỏi.
 - Logic điều khiển (gate, đếm giờ, buffer) → unit test trong `PoseDomain`. Con số đo đạc → **chỉ tin khi đo trên máy thật**.
 - Camera / cảm biến chỉ kiểm được trên iPhone thật.
 

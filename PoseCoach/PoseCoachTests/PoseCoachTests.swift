@@ -1,5 +1,7 @@
 import Testing
 import Foundation
+import MachO
+import ObjectiveC
 @testable import PoseCoach
 import MediaPipeTasksVision
 import MLKitFaceDetection
@@ -83,20 +85,17 @@ struct PoseCoachPhase0Tests {
         poseOptions.minPosePresenceConfidence = 0.5
         poseOptions.minTrackingConfidence = 0.5
 
-        let landmarker = try PoseLandmarker(options: poseOptions)
-        #expect(landmarker != nil)
+        _ = try PoseLandmarker(options: poseOptions)
 
         // 2. ML Kit FaceDetector (dùng MLKitFaceDetection để tránh xung đột với MediaPipe)
         let faceOptions = MLKitFaceDetection.FaceDetectorOptions()
         faceOptions.performanceMode = .fast
-        let faceDetector = MLKitFaceDetection.FaceDetector.faceDetector(options: faceOptions)
-        #expect(faceDetector != nil)
+        _ = MLKitFaceDetection.FaceDetector.faceDetector(options: faceOptions)
 
         // 3. ML Kit ImageLabeler
         let labelerOptions = MLKitImageLabeling.ImageLabelerOptions()
         labelerOptions.confidenceThreshold = 0.2
-        let imageLabeler = MLKitImageLabeling.ImageLabeler.imageLabeler(options: labelerOptions)
-        #expect(imageLabeler != nil)
+        _ = MLKitImageLabeling.ImageLabeler.imageLabeler(options: labelerOptions)
 
         // 4. ONNX Runtime ORTSession
         guard let onnxURL = findBundleFile(named: "geocalib-mang-int8", withExtension: "onnx") else {
@@ -105,52 +104,79 @@ struct PoseCoachPhase0Tests {
         }
         let ortEnv = try ORTEnv(loggingLevel: .warning)
         let sessionOptions = try ORTSessionOptions()
-        let session = try ORTSession(env: ortEnv, modelPath: onnxURL.path, sessionOptions: sessionOptions)
-        #expect(session != nil)
+        _ = try ORTSession(env: ortEnv, modelPath: onnxURL.path, sessionOptions: sessionOptions)
     }
 
-    @Test("String Catalog: Đủ 477 chuỗi + 3 plurals, mỗi key đủ en và vi")
+    /// Trùng đã biết, chấp nhận: MediaPipe 1.0.0 nhúng sẵn GTM trong `libMediaPipeTasksCommon_*_graph.a`
+    /// (bị `-force_load`), ML Kit 8.0.0 lại kéo pod `GoogleToolboxForMac` + `GTMSessionFetcher`.
+    /// Liên kết tĩnh thì link lỗi (1181 duplicate symbols). Rủi ro thấp: GTMLogger chỉ ghi log,
+    /// GTMSessionFetcher dùng tải model qua mạng — model ML Kit của app đóng sẵn trong bundle.
+    /// Thêm tên vào đây phải hỏi người dùng trước (xem AGENTS.md, mục Build & test).
+    private static let knownGTMDuplicates: Set<String> = [
+        "GTMLogger", "GTMLogBasicFormatter", "GTMLogStandardFormatter", "GTMLogLevelFilter",
+        "GTMLogNoFilter", "GTMLogAllowedLevelFilter", "GTMLogMininumLevelFilter", "GTMLogMaximumLevelFilter",
+        "GTMSessionFetcher", "GTMSessionCookieStorage", "GTMUserAgentStringProvider",
+        "GTMStandardUserAgentProvider", "GTMSessionFetcherService",
+        "GTMSessionFetcherSessionDelegateDispatcher", "GTMSessionUploadFetcher",
+    ]
+
+    /// Tương đương cảnh báo runtime `Class X is implemented in both A and B`:
+    /// tên class ObjC xuất hiện ở ≥ 2 image đã nạp, trong đó ít nhất một image nằm trong app bundle.
+    ///
+    /// Bỏ qua chính test bundle (`PlugIns/*.xctest`): `onnxruntime_objc` là framework TĨNH với symbol ẩn
+    /// (`nm`: `s _OBJC_CLASS_$_ORTEnv`), nên test gọi `ORTSession` thì buộc phải link bản riêng — trùng đó
+    /// chỉ có khi chạy test, app thật chỉ có một bản. Test này kiểm cái app phát hành.
+    @Test("Không có class ObjC trùng giữa MediaPipe / ML Kit / ONNX Runtime / app (trừ GTM đã biết)")
+    func testNoDuplicateObjCClasses() {
+        let bundlePath = Bundle.main.bundlePath
+        let testBundlesPath = Bundle.main.builtInPlugInsPath ?? bundlePath + "/PlugIns"
+        var owner: [String: String] = [:]
+        var duplicates: [String] = []
+
+        for i in 0..<_dyld_image_count() {
+            guard let cImage = _dyld_get_image_name(i) else { continue }
+            let image = String(cString: cImage)
+            if image.hasPrefix(testBundlesPath) { continue }
+            var count: UInt32 = 0
+            guard let names = objc_copyClassNamesForImage(cImage, &count) else { continue }
+            defer { free(UnsafeMutableRawPointer(mutating: names)) }
+
+            for j in 0..<Int(count) {
+                let name = String(cString: names[j])
+                if Self.knownGTMDuplicates.contains(name) { continue }
+                if let previous = owner[name], previous != image {
+                    if previous.hasPrefix(bundlePath) || image.hasPrefix(bundlePath) {
+                        duplicates.append("\(name): \(previous) ↔ \(image)")
+                    }
+                } else {
+                    owner[name] = image
+                }
+            }
+        }
+
+        #expect(duplicates.isEmpty, "Class ObjC trùng:\n\(duplicates.joined(separator: "\n"))")
+    }
+
+    /// Kiểm bản ĐÃ BIÊN DỊCH trong bundle (`<lang>.lproj/Localizable.strings` + `.stringsdict`),
+    /// không đọc `.xcstrings` nguồn: app chạy trong sandbox không đọc được thư mục repo, và cái người dùng
+    /// nhận là bản biên dịch.
+    @Test("String Catalog: đủ 477 chuỗi + 3 plurals, en và vi khớp key")
     func testStringCatalogParity() throws {
-        // Đọc Localizable.xcstrings từ bundle hoặc fallback từ repo
-        var catalogURL = findBundleFile(named: "Localizable", withExtension: "xcstrings")
-        if catalogURL == nil {
-            let sourceURL = URL(fileURLWithPath: #filePath)
-                .deletingLastPathComponent()
-                .deletingLastPathComponent()
-                .appendingPathComponent("PoseCoach/Resources/Localizable.xcstrings")
-            if FileManager.default.fileExists(atPath: sourceURL.path) {
-                catalogURL = sourceURL
+        func keys(_ lang: String, _ type: String) -> Set<String> {
+            guard let path = Bundle.main.path(forResource: "Localizable", ofType: type, inDirectory: nil, forLocalization: lang),
+                  let dict = NSDictionary(contentsOfFile: path) as? [String: Any] else {
+                Issue.record("Thiếu hoặc không đọc được \(lang).lproj/Localizable.\(type)")
+                return []
             }
+            return Set(dict.keys)
         }
 
-        guard let catalogURL = catalogURL, FileManager.default.fileExists(atPath: catalogURL.path) else {
-            Issue.record("Không tìm thấy Localizable.xcstrings")
-            return
-        }
+        let enStrings = keys("en", "strings"), viStrings = keys("vi", "strings")
+        let enPlurals = keys("en", "stringsdict"), viPlurals = keys("vi", "stringsdict")
 
-        let data = try Data(contentsOf: catalogURL)
-        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        guard let strings = json?["strings"] as? [String: [String: Any]] else {
-            Issue.record("Định dạng Localizable.xcstrings không hợp lệ")
-            return
-        }
-
-        #expect(strings.count == 480, "Tổng số key là \(strings.count), kỳ vọng đúng 480 (477 chuỗi + 3 plurals)")
-
-        var missingEn: [String] = []
-        var missingVi: [String] = []
-
-        for (key, content) in strings {
-            guard let locs = content["localizations"] as? [String: Any] else {
-                missingEn.append(key)
-                missingVi.append(key)
-                continue
-            }
-            if locs["en"] == nil { missingEn.append(key) }
-            if locs["vi"] == nil { missingVi.append(key) }
-        }
-
-        #expect(missingEn.isEmpty, "Các key thiếu tiếng Anh: \(missingEn)")
-        #expect(missingVi.isEmpty, "Các key thiếu tiếng Việt: \(missingVi)")
+        #expect(enStrings.count == 477, "en: \(enStrings.count) chuỗi, kỳ vọng 477")
+        #expect(enPlurals.count == 3, "en: \(enPlurals.count) plural, kỳ vọng 3")
+        #expect(enStrings == viStrings, "Lệch key chuỗi — thiếu vi: \(enStrings.subtracting(viStrings).sorted()), thiếu en: \(viStrings.subtracting(enStrings).sorted())")
+        #expect(enPlurals == viPlurals, "Lệch key plural — thiếu vi: \(enPlurals.subtracting(viPlurals).sorted()), thiếu en: \(viPlurals.subtracting(enPlurals).sorted())")
     }
 }

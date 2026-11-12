@@ -49,16 +49,22 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		57FE5B5E30A41C1A00257BCC /* PoseCoach */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = PoseCoach;
 			sourceTree = "<group>";
 		};
 		57FE5B6C30A41C1C00257BCC /* PoseCoachTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = PoseCoachTests;
 			sourceTree = "<group>";
 		};
 		57FE5B7630A41C1C00257BCC /* PoseCoachUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = PoseCoachUITests;
 			sourceTree = "<group>";
 		};
@@ -150,8 +156,8 @@
 				57FE5B5830A41C1A00257BCC /* Sources */,
 				57FE5B5930A41C1A00257BCC /* Frameworks */,
 				57FE5B5A30A41C1A00257BCC /* Resources */,
-				6E77A1852DCC436D5E22298A /* [CP] Embed Pods Frameworks */,
 				41B6EA67DE6309AE1A2EC247 /* [CP] Copy Pods Resources */,
+				3DE4F16089E06954AD6FFA98 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -198,8 +204,8 @@
 				57FE5B6F30A41C1C00257BCC /* Sources */,
 				57FE5B7030A41C1C00257BCC /* Frameworks */,
 				57FE5B7130A41C1C00257BCC /* Resources */,
-				505B70F7D5EE81E9CBE19610 /* [CP] Embed Pods Frameworks */,
 				CD1922901563C3116C394865 /* [CP] Copy Pods Resources */,
+				6DB5D32EAB9F89EF2717F3F7 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -248,7 +254,7 @@
 			mainGroup = 57FE5B5330A41C1A00257BCC;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B91A9055795731946E606792 /* XCLocalSwiftPackageReference "Packages/PoseDomain" */,
+				B91A9055795731946E606792 /* XCLocalSwiftPackageReference "PoseDomain" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 57FE5B5D30A41C1A00257BCC /* Products */;
@@ -309,6 +315,23 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		3DE4F16089E06954AD6FFA98 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		41B6EA67DE6309AE1A2EC247 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -317,13 +340,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -352,7 +371,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		505B70F7D5EE81E9CBE19610 /* [CP] Embed Pods Frameworks */ = {
+		6DB5D32EAB9F89EF2717F3F7 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -360,38 +379,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
-			outputPaths = (
-			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		6E77A1852DCC436D5E22298A /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		C494FEAD7211A26DB297262C /* [CP] Check Pods Manifest.lock */ = {
@@ -424,13 +418,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -605,11 +595,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2QLLSJ6D6Q;
+				DEVELOPMENT_TEAM = S7WPNU5HBB;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "PoseCoach needs camera access to analyze poses and guide your photography in real time.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "PoseCoach saves your best captured shots to your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -646,11 +635,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2QLLSJ6D6Q;
+				DEVELOPMENT_TEAM = S7WPNU5HBB;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "PoseCoach needs camera access to analyze poses and guide your photography in real time.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "PoseCoach saves your best captured shots to your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -685,7 +673,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2QLLSJ6D6Q;
+				DEVELOPMENT_TEAM = S7WPNU5HBB;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
@@ -708,7 +696,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2QLLSJ6D6Q;
+				DEVELOPMENT_TEAM = S7WPNU5HBB;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
@@ -730,7 +718,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2QLLSJ6D6Q;
+				DEVELOPMENT_TEAM = S7WPNU5HBB;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
@@ -752,7 +740,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2QLLSJ6D6Q;
+				DEVELOPMENT_TEAM = S7WPNU5HBB;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
@@ -810,7 +798,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		B91A9055795731946E606792 /* XCLocalSwiftPackageReference "Packages/PoseDomain" */ = {
+		B91A9055795731946E606792 /* XCLocalSwiftPackageReference "PoseDomain" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PoseDomain;
 		};
@@ -819,7 +807,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		A2D833937947F648DD7E6943 /* PoseDomain */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B91A9055795731946E606792 /* XCLocalSwiftPackageReference "Packages/PoseDomain" */;
+			package = B91A9055795731946E606792 /* XCLocalSwiftPackageReference "PoseDomain" */;
 			productName = PoseDomain;
 		};
 /* End XCSwiftPackageProductDependency section */

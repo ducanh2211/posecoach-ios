@@ -118,7 +118,7 @@ Phát hiện bẫy mới → thêm dòng.
 **Tiêu chí xong:**
 - [x] Build My Mac xanh; app mở thấy 3 tab rỗng
 - [x] Test trong `PoseCoachTests`: đọc được model, file onnx, và đủ 114 ảnh mẫu từ bundle (quét đệ quy)
-- [x] Test: khởi tạo `PoseLandmarker`, `FaceDetector`, `ImageLabeler`, `ORTSession` cùng lúc — log không có `Class … is implemented in both`
+- [x] Test: khởi tạo `PoseLandmarker`, `FaceDetector`, `ImageLabeler`, `ORTSession` cùng lúc; `testNoDuplicateObjCClasses` không thấy class ObjC trùng ngoài 15 class GTM đã biết (MediaPipe nhúng sẵn GTM — xem AGENTS.md "Build & test"; tương đương cảnh báo `Class … is implemented in both`)
 - [x] `Localizable.xcstrings` đủ 477 + 3 key, mỗi key đủ `en` và `vi`; script chạy lại được khi Android thêm chuỗi
 
 ⏸ **Điểm dừng 0**
