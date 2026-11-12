@@ -24,7 +24,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
-| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | 🔶 4a, 4b, 4c xong (4c chờ kiểm iPhone) | 12/11/2026 |
+| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ✅ code xong (4a–4d) · 4b, 4c, 4d chờ kiểm iPhone | 12/11/2026 |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
 
@@ -112,6 +112,7 @@ tay che mặt, khoá chủ thể nhiều người, trạng thái `ACQUIRING`.
 | `minWith(compareByDescending…)` / `maxWith` | Đọc kỹ comparator rồi viết lại bằng `min(by:)` / `max(by:)` **đúng chiều** | FG 21: Android từng lấy nhầm phần tử tốt nhất thay vì kém nhất |
 | `listOfNotNull(...)` cho danh sách góc | Giữ đủ phần tử, dùng `Double.nan` | FG 50: danh sách góc phải ổn định vị trí; bỏ phần tử làm lệch cặp so sánh |
 | `Math.toDegrees` / `toRadians` | `toDegrees(x)` trong `PD/Pose/PoseGeometry.swift` = `x * (180.0 / .pi)` | Java nhân với hằng số tính sẵn `180/π`. **Không** viết `x * 180 / .pi` — thứ tự khác, lệch chữ số cuối. `toRadians` thêm khi cần: `x * (.pi / 180.0)` |
+| `"%.0f".format(x)` (Java) | `x.rounded()` (x ≥ 0) | Java làm tròn **nửa lên** (48,5 → "49"); `String(format: "%.0f")` của C làm tròn **nửa về số chẵn** (→ "48"). Gặp ở `ResultShot.scoreText` — điểm đọc từ bảng kê 3 số lẻ nên ,500 có thật |
 | `String.format("%.2f", x)`, `"%.1fx"` | `String(format:, locale: Locale(identifier: "en_US_POSIX"), …)` | Máy tiếng Việt in dấu phẩy → hỏng CSV (`LocaleCsvTest`) và nhãn zoom "1,5x" (FG 51, 106) |
 | `plurals` | Variations của String Catalog | FG 106: số ít/nhiều phải đủ cả en và vi |
 | `data class` | `struct …: Equatable` | So `Double.nan == .nan` luôn `false` ở cả hai — test có NaN phải đọc kỹ |
@@ -464,7 +465,8 @@ có log + trả `nil`, không treo.
   (nhận `CMSampleBuffer` + hướng, FG 30/71) thêm ở 4c.
 - `Sharpness` / `GeoCalibGocMay` thu nhỏ bằng Core Graphics `.low` (song tuyến), không dùng Accelerate; GeoCalib vẫn
   từng nấc một nửa như Android. Thứ tự 4 đầu ra lấy theo `outputNames()` của phiên (như `ra.get(0..3)`).
-- `ResultLibrary`: chưa có lưu vào Photos (Kotlin cũng không ở file này) — làm ở 4d.
+- `ResultLibrary`: không lưu vào Photos — Kotlin không lưu ra thư viện ảnh của máy ở đâu cả (4d kiểm lại: không có
+  `MediaStore`, chỉ xin quyền CAMERA). Ảnh giữ lại chỉ nằm trong thư viện của app.
 
 ⏸ **Điểm dừng 3c = hết Phase 3**
 
@@ -596,8 +598,29 @@ Test: `StringsParityTest` → mới trong `PoseCoachTests`: mọi key có `en` +
 
 Test: `FailedCriteriaTest` (6) — phần thuần đặt ở `PD/` nếu không chạm framework.
 
-- [ ] 5 ảnh cạnh ảnh mẫu + bảng phân tích; "không tấm nào đạt" khi điểm gần 0 (FG 24)
-- [ ] Rời màn → hỏi "Lưu ảnh vào thư viện?", chặn quay lại màn chụp cũ; giữ 1 → xoá cả thư mục phiên (FG 114)
+- [x] ≤ 5 ảnh + bảng phân tích; "không tấm nào đạt" khi điểm ≈ 0 (FG 24) — `PDT/Result/FailedCriteriaTest` (6) +
+  `UiTextResolveTests.loiKhuyenKhongDatNoiVoiMau` (chữ tiếng Việt). Kotlin **không** hiện ảnh mẫu trên màn này (nạp
+  `templateThumb` nhưng không vẽ) — plan cũ ghi "cạnh ảnh mẫu" là sai
+- [x] Rời màn → hỏi "Lưu ảnh vào thư viện?"; giữ → xoá cả thư mục phiên (FG 114) — `ResultFlowTests` (7): nạp từ đĩa,
+  lưu tất cả (ảnh mẫu + xếp theo điểm + `_diem.txt`, xoá phiên), lưu ảnh đã tích, quay lại phải hỏi / không lưu thì xoá,
+  xoá để chụp lại → camera, phiên rỗng thoát không hỏi, chép hỏng → báo + giữ phiên. 61/61 PoseCoachTests, 269/269
+  PoseDomain (12/11/2026)
+- [ ] Nhìn tận mắt + ba lối ra trên iPhone — `docs/CHECKLIST_KIEM_IPHONE.md` mục E
+
+**Đã làm (12/11/2026)** — khác plan / Kotlin:
+- File: `ResultUiState`, `ResultViewModel`, `ResultView`, `ScoreBreakdown` (`App/Features/Result/`) +
+  `PD/Result/FailedCriterion.swift` (`FailedCriterion` + `failedCriteria` + `criterionAdvice` — phần thuần của
+  `ResultUiState.kt`; test so key `part_…` thay chữ tiếng Việt).
+- **Bỏ** `templateName` / `templateThumb` của `ResultUiState` — Kotlin nạp nhưng `ResultScreen` không dùng.
+- ViewModel tạo mới mỗi lần vào màn → không cần `loadedDir`; vẫn xoá `exitTo` sau khi dùng (FG 114). Album
+  `buoi-<ms>` đặt tên lúc tạo ViewModel (Kotlin: lúc `LaunchedEffect` gọi `load`).
+- Điều hướng: `RootView` giữ **một** `fullScreenCover` cho cả chuỗi chụp → xem lại → chụp lại, đổi màn bên trong (tránh
+  lỗi mở lớp mới khi lớp cũ đang đóng dở). Lưu → tab Thư viện (chưa port, Phase 5); xoá → màn chụp mới cùng ảnh mẫu;
+  quay lại → tab Ảnh mẫu. Không có Back hệ thống — chỉ nút "‹", luôn qua hộp hỏi.
+- Hộp "Lưu ảnh vào thư viện?" thêm nút **Huỷ** (`action_cancel`) — alert iOS không đóng được bằng chạm ra ngoài như
+  `onDismissRequest` của Android.
+- Không lưu vào Photos (Kotlin không có). Khoá `NSPhotoLibraryAddUsageDescription` từ Phase 0 đang thừa — chờ người
+  dùng quyết gỡ hay giữ.
 
 ⏸ **Điểm dừng 4d = hết Phase 4**
 

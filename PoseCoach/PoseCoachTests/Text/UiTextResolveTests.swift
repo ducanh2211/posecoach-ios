@@ -43,4 +43,18 @@ struct UiTextResolveTests {
         let s = UiText.plural("steps_n", count: 2, [.int(2)]).resolved(vi)
         #expect(s.contains("2") && s != "steps_n")
     }
+
+    /// Phần chữ của `KTT/FailedCriteriaTest` (`moi muc bao deu kem loi khuyen cu the`): lời khuyên viết theo góc nhìn
+    /// NGƯỜI MẪU vì người cầm máy đọc to lên cho mẫu nghe. Phần chọn mục ở `PDT/Result/FailedCriteriaTest`.
+    @Test func loiKhuyenKhongDatNoiVoiMau() throws {
+        let vi = try bundle("vi")
+        let f = try #require(FailedCriterion.failedCriteria([
+            ShotCandidate(id: 1, timeMs: 1000, score: 50, trustworthy: true, parts: ["huong": 0.0]),
+            ShotCandidate(id: 2, timeMs: 2000, score: 50, trustworthy: true, parts: ["huong": 0.0]),
+        ]).first)
+        #expect(uiText(f.labelRes).resolved(vi) == "Hướng mẫu")
+        let advice = uiText(f.adviceRes).resolved(vi)
+        #expect(!advice.trimmingCharacters(in: .whitespaces).isEmpty)
+        #expect(advice.contains("mẫu"), "Phải nói cho mẫu làm gì")
+    }
 }

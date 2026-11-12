@@ -10,16 +10,12 @@ struct RootView: View {
         case templates, library, settings
     }
 
-    /// Màn mở đè lên các tab. Màn xem lại thêm ở 4d.
-    enum Route: Identifiable {
+    /// Màn mở đè lên các tab.
+    enum Route {
         /// Ảnh mẫu đã qua cổng kiểm.
         case capture(template: URL)
-
-        var id: String {
-            switch self {
-            case let .capture(t): "capture:\(t.path)"
-            }
-        }
+        /// Phiên vừa chấm xong (`Caches/shots/<phiên>/` + `index.csv`) và ảnh mẫu đã dùng.
+        case result(template: URL, sessionDir: URL)
     }
 
     /// Nhớ TAB đang mở qua lần dựng lại màn hình (như `ScreenSaver` của Kotlin). Màn chụp không nhớ: dựng lại giữa chừng
@@ -42,18 +38,30 @@ struct RootView: View {
                 .tag(Tab.settings)
         }
         .tint(Ds.navActive)
-        .fullScreenCover(item: $route) { r in
-            switch r {
+        // MỘT lớp toàn màn hình cho cả chuỗi chụp → xem lại → chụp lại: đổi màn bên trong thay vì đóng lớp này mở lớp
+        // khác (SwiftUI bỏ qua lệnh mở lớp mới khi lớp cũ đang đóng dở). Mỗi lần đổi nhánh là view MỚI → ViewModel mới.
+        .fullScreenCover(isPresented: Binding(get: { route != nil }, set: { if !$0 { route = nil } })) {
+            switch route {
             case let .capture(template):
                 CaptureView(
                     template: template,
                     // "Đổi mẫu" → về tab Ảnh mẫu (như `onBack = { screen = Screen.Templates }`).
                     onBack: { tab = .templates; route = nil },
-                    // Màn xem lại port ở 4d. Tới đó chấm xong thì về tab Ảnh mẫu; phiên nằm trong `Caches/shots/` và bị
-                    // `ShotStore.sweepOrphans` dọn ở lần mở app sau.
-                    onFinished: { _ in tab = .templates; route = nil },
+                    onFinished: { route = .result(template: template, sessionDir: $0) },
                     onOpenLibrary: { tab = .library; route = nil }
                 )
+            case let .result(template, sessionDir):
+                // Ba lối ra (17/10/2026): lưu → Thư viện xem ngay; xoá để chụp lại → camera; quay lại (đã hỏi lưu hay
+                // bỏ) → màn Ảnh mẫu.
+                ResultView(sessionDir: sessionDir, templateFile: template) { exit in
+                    switch exit {
+                    case .library: tab = .library; route = nil
+                    case .camera: route = .capture(template: template)
+                    case .templates: tab = .templates; route = nil
+                    }
+                }
+            case nil:
+                EmptyView()
             }
         }
     }

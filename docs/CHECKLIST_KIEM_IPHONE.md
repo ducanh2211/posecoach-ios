@@ -76,14 +76,29 @@ Vào màn chụp như mục A. Chọn ảnh mẫu toàn thân "người khác ch
 - [ ] Nút Khung 3:4 → 9:16 → 1:1 → Full (khoá khi đang quay); nút Lưới bật/tắt 3×3
 - [ ] Xong các bước góc máy → vạch đặt người hiện ra + câu "đặt người vào vạch" vài giây; chấm chạm vạch thì xanh
 - [ ] Tự động: đủ điều kiện → giữ ~0,8 s → đếm 3-2-1 → tự chụp; rung tay ngắn không huỷ đếm; nút chụp tay vẫn bấm được
-- [ ] Chụp liên tục → màn "Đang xử lý" có % → về tab Ảnh mẫu (màn xem lại là 4d). Container: `Library/Caches/burst/`
-  **trống**, `Library/Caches/shots/<phiên>/` có ≤ 5 ảnh + `index.csv`
+- [ ] Chụp liên tục → màn "Đang xử lý" có % → sang màn xem lại (mục E). Container: `Library/Caches/burst/` **trống**
 - [ ] Quay video ≥ 3 s → dừng → xử lý → `Library/Caches/recordings/` **trống** (video thô đã xoá)
 - [ ] Ảnh mẫu selfie → mở camera trước; ảnh `mirror-…` → camera sau chế độ gương; ảnh `tripod-…` → camera trước, **tự
   động bật sẵn**, có giai đoạn đặt máy (đặt máy đúng góc trước, rồi mới mời ra đứng vào khung)
 - [ ] Ảnh mẫu chân dung (mặt to): hướng mặt được hướng dẫn (đường nhận diện mặt live), camera trước không bị ngược chiều
   trái/phải
 - [ ] Chụp liên tục mà không có người trong khung → báo lỗi rõ ràng, **chụp lại được ngay** (không bị khoá nút)
+
+## E. Màn xem lại 4d
+
+Chụp liên tục hoặc quay video như mục D → tự sang màn "Kết quả".
+
+- [ ] ≤ 5 ảnh trong dải ngang, tấm đầu được chọn sẵn; bấm ảnh → xem to; nhãn "Khớp mẫu tốt nhất  <điểm>" góc ảnh to
+- [ ] Bấm ô tròn góc ảnh → tích / bỏ tích; nút "Lưu ảnh đã chọn (n)" đếm đúng, khoá khi n = 0
+- [ ] Bảng điểm: bấm → mở các dòng mục + "Không áp dụng với ảnh mẫu này: …"; ảnh ít mốc đo → dòng vàng
+- [ ] Mẫu quay LƯNG khi ảnh mẫu quay MẶT (hoặc ngược lại) → hộp đỏ "Chưa tấm nào đạt Hướng mẫu" + lời khuyên, **không**
+  có nhãn "Khớp mẫu tốt nhất" (FOOTGUNS 24)
+- [ ] "Lưu tất cả" → sang tab Thư viện; container `Library/Application Support/thu-vien/buoi-…/` có `_mau.jpg`,
+  `anh-01…`, `_diem.txt`; `Library/Caches/shots/` **trống**
+- [ ] "Xoá" → hỏi lại → Xoá → về **màn chụp** cùng ảnh mẫu, chụp tiếp được; "Giữ lại" → ở lại màn
+- [ ] Nút "‹" → hộp "Lưu ảnh vào thư viện?": Lưu tất cả / Không lưu → **đóng hẳn** về tab Ảnh mẫu (kiểm kỹ: lớp toàn
+  màn hình phải đóng dù hộp thoại vừa đóng); Huỷ → ở lại
+- [ ] Vào chụp lại lần nữa sau khi thoát → **không** tự nhảy về màn kết quả cũ (FOOTGUNS 114)
 
 ## Còn treo bên Android (đã báo người dùng, chưa kiểm)
 
