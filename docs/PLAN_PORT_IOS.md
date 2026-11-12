@@ -132,7 +132,7 @@ Phát hiện bẫy mới → thêm dòng.
 | Tài nguyên (D1) | Tham chiếu `pose_landmarker_full.task`, `geocalib/geocalib-mang-int8.onnx` (30,7 MB), `templates/` (**114 ảnh**: 13 ở gốc + `mirror/` 51, `photographer/` 44, `selfie/` 6). Giữ nguyên cây thư mục. **Nhóm ảnh đọc từ tiền tố tên file, không từ thư mục** — code phải quét đệ quy |
 | String Catalog | Script `tools/strings-xml-to-xcstrings/` (repo iOS) đọc `res/values/strings.xml` + `values-vi/strings.xml` (477 chuỗi + 3 plurals mỗi bên) → `App/Resources/Localizable.xcstrings`. **Key = tên resource Android.** `%1$s` → `%1$@`, `%1$d` → `%1$lld`. Plurals → variations |
 | Ngôn ngữ dự án | Thêm `vi` vào `knownRegions`; tiếng Anh là ngôn ngữ phát triển |
-| Info.plist | `NSCameraUsageDescription`; `NSPhotoLibraryAddUsageDescription` (thiếu là crash — lỗi bản iOS cũ); `UIRequiredDeviceCapabilities` = `gyroscope` (FG 2). **Không cần micro** — Android quay không tiếng. Nhập ảnh bằng `PhotosPicker` → không cần quyền đọc thư viện |
+| Info.plist | `NSCameraUsageDescription`; ~~`NSPhotoLibraryAddUsageDescription`~~ (gỡ 12/11/2026 — app không lưu vào Photos, xem 4d); `UIRequiredDeviceCapabilities` = `gyroscope` (FG 2). **Không cần micro** — Android quay không tiếng. Nhập ảnh bằng `PhotosPicker` → không cần quyền đọc thư viện |
 | Pod (D2) | Thêm `onnxruntime-objc` 1.30.0 vào Podfile; `pod install`; build My Mac. Kiểm **trùng symbol khi link** giữa MediaPipe + ML Kit + ONNX Runtime |
 | Khung app | `App/App/PoseCoachApp.swift` + `RootView.swift`: 3 tab theo `MainActivity.kt` — **Ảnh mẫu · Thư viện · Cài đặt**. Xoá `ContentView.swift` mẫu |
 
@@ -434,7 +434,7 @@ hướng GIAO DIỆN) + `CameraPermission`; `Extensions/UiText+Resolve` (kéo t�
 | `media/UprightBitmap.kt` (103) | `App/Services/Media/UprightImage.swift` | **Nơi DUY NHẤT đọc file ảnh**: `CGImageSource` + EXIF orientation (FG 44) |
 | `media/VideoFrameSource.kt` (106) | `App/Services/Media/VideoFrameSource.swift` | `AVAssetReader` tuần tự (FG 18) |
 | `media/MediaLibrary.kt` (phần file) | `App/Services/Media/MediaLibrary.swift` | Quét đệ quy ảnh mẫu trong bundle + ảnh tự nhập (chép vào Application Support, không giữ đường dẫn gốc). Nhóm / nhãn đọc bằng `TemplateKind`. Ảnh người dùng xoá không tự mọc lại (FG 32) |
-| `media/ResultLibrary.kt` (169) | `App/Services/Media/ResultLibrary.swift` | Lưu ảnh giữ lại + ảnh mẫu + `_diem.txt` (FG 114); Photos chỉ cần quyền **thêm** |
+| `media/ResultLibrary.kt` (169) | `App/Services/Media/ResultLibrary.swift` | Lưu ảnh giữ lại + ảnh mẫu + `_diem.txt` (FG 114); không lưu vào Photos (như Kotlin) |
 | `capture/ShotStore.kt` (238) | `App/Services/Media/ShotStore.swift` | Kho ảnh tạm + **chống rác 4 lớp** (`sweepOrphans`, `sweepRecordings` lúc mở app). CSV theo `en_US_POSIX` |
 | `capture/Sharpness.kt` (102) | `App/Services/Media/Sharpness.swift` | Laplacian **toàn khung**, thu bề ngang về 160 px (Accelerate) — giữ đúng cách thu nhỏ |
 
@@ -582,7 +582,7 @@ Test: `StringsParityTest` → mới trong `PoseCoachTests`: mọi key có `en` +
 - Không có nhánh `catch (Throwable)` khi chấm — hàm Swift ở đây không ném lỗi; mọi nhánh hỏng có câu báo riêng.
 - ⚠️ **Sửa lệch có chủ ý**: `onProcessingFailed` đặt lại `burstTaken = 0`. Kotlin giữ nguyên → chấm loạt ảnh hỏng
   (vd. "không thấy người") thì nút chụp (`burstTaken == 0`) và công tắc chế độ khoá luôn tới khi rời màn. **Nghi lỗi
-  Android — đã báo người dùng.**
+  Android — đã báo; người dùng chốt GIỮ bản sửa (12/11/2026).**
 - Chấm xong: màn xem lại chưa có (4d) → tạm về tab Ảnh mẫu; phiên nằm ở `Caches/shots/`, `sweepOrphans` dọn ở lần mở
   app sau. Nút thư viện → tab Thư viện.
 
@@ -619,8 +619,8 @@ Test: `FailedCriteriaTest` (6) — phần thuần đặt ở `PD/` nếu không 
   quay lại → tab Ảnh mẫu. Không có Back hệ thống — chỉ nút "‹", luôn qua hộp hỏi.
 - Hộp "Lưu ảnh vào thư viện?" thêm nút **Huỷ** (`action_cancel`) — alert iOS không đóng được bằng chạm ra ngoài như
   `onDismissRequest` của Android.
-- Không lưu vào Photos (Kotlin không có). Khoá `NSPhotoLibraryAddUsageDescription` từ Phase 0 đang thừa — chờ người
-  dùng quyết gỡ hay giữ.
+- Không lưu vào Photos (Kotlin không có). Đã gỡ khoá `NSPhotoLibraryAddUsageDescription` (người dùng chốt
+  12/11/2026).
 
 ⏸ **Điểm dừng 4d = hết Phase 4**
 
