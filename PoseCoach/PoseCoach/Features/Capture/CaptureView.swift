@@ -2,37 +2,74 @@ import PoseDomain
 import SwiftUI
 import UIKit
 
-/// Màn chụp. Port `KT/capture/CaptureScreen.kt` — **mới phần lõi camera** (kéo sớm để kiểm 3b trên iPhone): xem trước
-/// đúng tỉ lệ khung, khung xương, chọn Ảnh / Video, nút chụp, đổi camera. Hướng dẫn, ảnh mẫu, lưới, nút tỉ lệ, zoom,
-/// đếm ngược thêm ở bước 4c.
+/// MÀN CHỤP — màn chụp DUY NHẤT của app. Port giao diện `KT/capture/CaptureScreen.kt`.
+///
+/// ```
+///   camera + nhận diện realtime + hướng dẫn
+///      → bấm chụp (hoặc tự động đếm xong) → chụp 8 tấm / quay video
+///      → chấm từng khung (cùng hàm đo với ảnh mẫu) → giữ 5 tấm khớp nhất → XOÁ nguồn
+///      → màn xem lại
+/// ```
+///
+/// Khác Android: bỏ dòng số đo `⚠️ TẠM` và GeoCalib chạy trên màn chụp (D7); thoát bằng nút "Đổi mẫu" (không có nút Back
+/// hệ thống).
 struct CaptureView: View {
 
     @State private var vm: CaptureViewModel
-
-    init(template: URL) {
-        _vm = State(initialValue: CaptureViewModel(template: template))
-    }
-    @Environment(\.dismiss) private var dismiss
+    private let onBack: () -> Void
+    private let onFinished: (URL) -> Void
+    private let onOpenLibrary: () -> Void
     @Environment(\.openURL) private var openURL
 
-    /// Khung xương mờ: mặc định BẬT — công cụ của người cầm máy để biết cần nói gì với mẫu.
+    /// Bảng số liệu thô: ẩn mặc định cho giao diện sạch, bấm dòng trạng thái để mở.
+    @State private var showDebug = false
+    /// Khung xương mờ: mặc định BẬT — công cụ của người cầm máy để biết cần nói gì với mẫu (mẫu đứng xa, không nhìn được
+    /// màn hình).
     @State private var showSkeleton = true
-    /// Tỉ lệ khung người dùng chọn. Nút đổi tỉ lệ thêm ở 4c.
     @State private var tiLeChon: TiLeKhung = .baBon
+    /// Lưới BẬT sẵn (PO 11/10/2026): khuyến khích canh bố cục từ đầu; vẫn tắt được.
+    @State private var hienLuoi = true
+    /// Đang chụm hai ngón để zoom — mức zoom lúc bắt đầu chụm.
+    @State private var zoomChum: Float?
+
+    init(template: URL, onBack: @escaping () -> Void, onFinished: @escaping (URL) -> Void,
+         onOpenLibrary: @escaping () -> Void) {
+        _vm = State(initialValue: CaptureViewModel(template: template))
+        self.onBack = onBack
+        self.onFinished = onFinished
+        self.onOpenLibrary = onOpenLibrary
+    }
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
-            if vm.permission == .granted {
-                cameraArea
+            let s = vm.state
+            if s.processing {
+                // Đang chấm điểm thì chiếm trọn màn hình.
+                ProcessingView(progress: s.processProgress, note: s.processNote)
+            } else if s.analyzingTemplate && s.templateError == nil {
+                // ⚠️ CHƯA SINH XONG TIÊU CHÍ thì KHÔNG cho vào màn camera (luật số 7).
+                TemplateAnalyzingView(thumb: s.templateThumb)
             } else {
-                permissionPrompt
+                Color.black.ignoresSafeArea()
+                if vm.permission == .granted { cameraArea }
+                VStack(spacing: 0) {
+                    topRow
+                    Spacer(minLength: 0)
+                    bottomColumn
+                }
             }
-            controls
         }
         .statusBarHidden()
+        .simultaneousGesture(chumZoom, including: vm.state.cameraReady ? .all : .subviews)
         .onAppear { vm.onAppear() }
         .onDisappear { vm.onDisappear() }
+        // Chốt xong thì sang màn xem lại — "dùng" xong xoá ngay (FOOTGUNS 114).
+        .onChange(of: vm.state.finishedSession) {
+            if let d = vm.state.finishedSession {
+                vm.onFinishedHandled()
+                onFinished(d)
+            }
+        }
     }
 
     // MARK: - Khung xem trước
@@ -47,6 +84,11 @@ struct CaptureView: View {
             ZStack {
                 if let c = vm.previewSource {
                     CameraPreviewView(controller: c)
+                }
+                if hienLuoi {
+                    LuoiBaPhan()
+                    // Mốc đặt người chỉ hiện khi đã xong các bước góc máy.
+                    MocLuoiOverlay(mau: vm.state.mocMau, live: vm.state.mocLive, hien: vm.state.denBoCuc)
                 }
                 if vm.state.liveDetectionActive && showSkeleton {
                     SkeletonOverlay(
@@ -64,121 +106,121 @@ struct CaptureView: View {
         .ignoresSafeArea()
     }
 
-    // MARK: - Nút bấm
-
-    private var controls: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.title3.weight(.semibold))
-                        .frame(width: 44, height: 44)
-                        .background(.black.opacity(0.4), in: Circle())
-                }
-                .accessibilityLabel(Text(LocalizedStringKey("action_close")))
-                Spacer()
-                if vm.permission == .granted {
-                    Button { showSkeleton.toggle() } label: {
-                        Text(LocalizedStringKey(showSkeleton ? "capture_hide_skeleton" : "capture_show_skeleton"))
-                            .font(.footnote)
-                            .padding(.horizontal, 12).padding(.vertical, 8)
-                            .background(.black.opacity(0.4), in: Capsule())
-                    }
-                }
+    /// CHỤM HAI NGÓN ĐỂ ZOOM (18/10/2026). Khung xem trước không tự có cử chỉ này — app tự gắn camera nên phải tự bắt.
+    private var chumZoom: some Gesture {
+        MagnifyGesture()
+            .onChanged { v in
+                let z0 = zoomChum ?? vm.state.zoomRatio
+                zoomChum = z0
+                vm.setZoom(z0 * Float(v.magnification))
             }
-            if let error = vm.state.cameraError {
-                Button { vm.dismissError() } label: {
-                    Text(error)
-                        .font(.footnote)
-                        .multilineTextAlignment(.leading)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.red.opacity(0.75), in: RoundedRectangle(cornerRadius: 12))
+            .onEnded { _ in zoomChum = nil }
+    }
+
+    // MARK: - Hàng trên: tiêu chí (trái) + ảnh mẫu (phải)
+
+    private var topRow: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                Button { showDebug.toggle() } label: {
+                    Text(LocalizedStringKey(vm.state.personDetected ? "capture_model_seen" : "capture_model_not_seen"))
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(vm.state.personDetected ? Ds.success : Color(argb: 0xFFFF8A80))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(Ds.overlayScrim, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                CriteriaProgress(criteria: vm.state.criteria, matchPercent: vm.state.matchPercent)
+                    .frame(width: 150)
+                    .padding(.top, 8)
+                CriteriaChecklist(criteria: vm.state.criteria)
+                    .padding(.top, 6)
+                NutNho(uiText(showSkeleton ? "capture_hide_skeleton" : "capture_show_skeleton")) { showSkeleton.toggle() }
+                    .padding(.top, 6)
+                if showDebug {
+                    DebugPanel(state: vm.state).padding(.top, 8)
                 }
             }
             Spacer()
-            if vm.permission == .granted { bottomBar }
+            VStack(alignment: .trailing, spacing: 8) {
+                TemplateCard(thumb: vm.state.templateThumb)
+                NutNho(uiText("capture_change_template"), action: onBack)
+                // Đổi tỉ lệ giữa lúc quay thì ảnh ra lẫn hai khung — khoá lại.
+                NutNho(uiText("capture_frame_ratio", .string(tiLeChon.nhan)),
+                       enabled: !vm.state.recording && vm.state.burstTaken == 0) { tiLeChon = tiLeChon.tiep() }
+                NutNho(uiText(hienLuoi ? "capture_grid_on" : "capture_grid")) { hienLuoi.toggle() }
+            }
         }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 
-    private var bottomBar: some View {
+    // MARK: - Hàng dưới: zoom + câu chỉ dẫn + cụm nút chụp
+
+    private var bottomColumn: some View {
+        let s = vm.state
+        return VStack(spacing: 0) {
+            // Chip zoom nằm TRÊN CÙNG cụm dưới, đè lên khung hình. Vẫn hiện trong lúc quay: đổi zoom giữa chừng là hợp lệ.
+            if vm.permission == .granted && s.cameraReady {
+                ZoomBar(current: s.zoomRatio, range: vm.zoomRange, dangChum: zoomChum != nil) { vm.setZoom($0) }
+                    .padding(.bottom, 12)
+            }
+            if let e = s.templateError { loi(e) }
+            if let e = s.cameraError { loi(e) }
+
+            if vm.permission != .granted {
+                permissionNotice
+            } else {
+                CuePill(
+                    prepWarning: s.prepWarning,
+                    personDetected: s.personDetected,
+                    cue: s.cue,
+                    readyToCapture: s.readyToCapture,
+                    hasCriteria: !s.criteria.isEmpty,
+                    cueForModel: s.cueForModel,
+                    readyToPose: s.readyToPose,
+                    almost: s.almost,
+                    countdown: s.countdown,
+                    onClickWarning: { vm.resetZoom() }
+                )
+                Text(LocalizedStringKey(s.autoMode ? "capture_auto_skip_note" : "capture_manual_note"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(argb: 0xCCFFFFFF))
+                    .padding(.top, 6)
+                    .padding(.bottom, 10)
+                // Ẩn trong lúc quay / chụp để không đổi chế độ giữa chừng.
+                if !s.recording && s.burstTaken == 0 {
+                    CaptureSwitches(
+                        burstMode: s.burstMode, autoMode: s.autoMode,
+                        onBurstChange: { vm.onModeChanged(burst: $0) },
+                        onAutoChange: { vm.onAutoModeChanged($0) }
+                    )
+                    .padding(.bottom, 10)
+                }
+                CameraControls(
+                    state: s,
+                    enabled: vm.readyToRecord,
+                    burstCount: CaptureViewModel.burstCount,
+                    onToggle: { vm.shootManually() },
+                    onOpenLibrary: onOpenLibrary,
+                    onFlipCamera: { vm.flipCamera() }
+                )
+            }
+        }
+    }
+
+    private func loi(_ text: UiText) -> some View {
+        Text(verbatim: "⚠ " + text.resolved())
+            .font(.system(size: 12))
+            .foregroundStyle(Color(argb: 0xFFFF8A80))
+            .padding(.horizontal, 20).padding(.vertical, 4)
+    }
+
+    private var permissionNotice: some View {
         VStack(spacing: 12) {
-            statusLine
-                .font(.footnote.monospacedDigit())
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(.black.opacity(0.4), in: Capsule())
-            HStack(spacing: 8) {
-                modeChip("capture_mode_photo", selected: vm.state.burstMode) { vm.onModeChanged(burst: true) }
-                modeChip("capture_mode_video", selected: !vm.state.burstMode) { vm.onModeChanged(burst: false) }
-            }
-            .disabled(vm.state.recording || vm.bursting)
-            HStack {
-                Color.clear.frame(width: 52, height: 52)
-                Spacer()
-                shutter
-                Spacer()
-                Button { vm.flipCamera() } label: {
-                    Image(systemName: "arrow.triangle.2.circlepath.camera")
-                        .font(.title2)
-                        .frame(width: 52, height: 52)
-                        .background(.black.opacity(0.4), in: Circle())
-                }
-                .disabled(vm.state.recording || vm.bursting)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var statusLine: some View {
-        let s = vm.state
-        if s.recording {
-            Text(verbatim: String(format: "● %.1fs / %.0fs", Double(s.recordedMs) / 1000.0,
-                                  Double(CaptureUiState.maxRecordMs) / 1000.0))
-        } else if vm.bursting {
-            Text(uiText("capture_burst_taken", .int(s.burstTaken), .int(CaptureViewModel.burstCount)))
-        } else if s.burstMode {
-            Text(uiText("capture_tap_burst", .int(CaptureViewModel.burstCount)))
-        } else {
-            Text(LocalizedStringKey("capture_tap_record"))
-        }
-    }
-
-    private var shutter: some View {
-        let s = vm.state
-        let enabled = s.cameraReady && !vm.bursting && (!s.recording || s.canStop)
-        return Button { vm.shoot() } label: {
-            ZStack {
-                Circle().stroke(.white, lineWidth: 4).frame(width: 76, height: 76)
-                if s.recording {
-                    RoundedRectangle(cornerRadius: 6).fill(.red).frame(width: 30, height: 30)
-                } else {
-                    Circle().fill(s.burstMode ? Color.white : Color.red).frame(width: 62, height: 62)
-                }
-            }
-            .opacity(enabled ? 1 : 0.4)
-        }
-        .disabled(!enabled)
-        .accessibilityLabel(Text(LocalizedStringKey(s.recording ? "capture_tap_to_stop"
-                                                    : (s.burstMode ? "capture_mode_photo" : "capture_mode_video"))))
-    }
-
-    private func modeChip(_ key: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(LocalizedStringKey(key))
-                .font(.footnote.weight(selected ? .bold : .regular))
-                .padding(.horizontal, 14).padding(.vertical, 7)
-                .background(selected ? Color.white.opacity(0.25) : Color.black.opacity(0.4), in: Capsule())
-        }
-    }
-
-    // MARK: - Quyền camera
-
-    private var permissionPrompt: some View {
-        VStack(spacing: 16) {
             Text(LocalizedStringKey("permission_camera_reason"))
+                .font(.system(size: 14))
+                .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
             Button {
                 if vm.permission == .notDetermined {
@@ -189,12 +231,39 @@ struct CaptureView: View {
                 }
             } label: {
                 Text(LocalizedStringKey("permission_camera_allow"))
-                    .padding(.horizontal, 20).padding(.vertical, 10)
-                    .background(.white, in: Capsule())
-                    .foregroundStyle(.black)
+                    .font(.body.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24).padding(.vertical, 14)
+                    .background(Ds.primary, in: RoundedRectangle(cornerRadius: Ds.rCard))
             }
+            .buttonStyle(.plain)
         }
-        .foregroundStyle(.white)
-        .padding(32)
+        .padding(24)
+    }
+}
+
+/// Nút viên nhỏ trên nền mờ (kiểu nút "Đổi mẫu").
+private struct NutNho: View {
+
+    let nhan: UiText
+    var enabled = true
+    let action: () -> Void
+
+    init(_ nhan: UiText, enabled: Bool = true, action: @escaping () -> Void) {
+        self.nhan = nhan
+        self.enabled = enabled
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(nhan)
+                .font(.system(size: 11))
+                .foregroundStyle(enabled ? Color.white : Color(argb: 0x80FFFFFF))
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Ds.overlayScrim, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 }

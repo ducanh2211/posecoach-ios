@@ -36,13 +36,13 @@ nonisolated struct KetQuaNhap {
 }
 
 /// Nhãn "Mobile phone" từ mức này: chụp gương. Ảnh gương gần như luôn thấy điện thoại.
-private let nhanGuong: Float = 0.5
+nonisolated private let nhanGuong: Float = 0.5
 /// Nhãn "Selfie" từ mức này: selfie cam trước.
-private let nhanSelfie: Float = 0.6
+nonisolated private let nhanSelfie: Float = 0.6
 /// Dưới mức này coi như "không có". Giữa hai mốc là vùng không chắc.
-private let nhanKhong: Float = 0.3
+nonisolated private let nhanKhong: Float = 0.3
 /// Góc GeoCalib cách mốc ±15° ít hơn chừng này thì không chắc là nhóm nào.
-private let cachMocGoc = 4.0
+nonisolated private let cachMocGoc = 4.0
 
 /// Báo tiến độ: đi từ `tu` tới `den` (0..1), ước chừng `uocMs` mili giây. Giao diện tự chạy mượt trong khoảng đó —
 /// bước GeoCalib mất vài giây mà không báo được tiến độ bên trong.

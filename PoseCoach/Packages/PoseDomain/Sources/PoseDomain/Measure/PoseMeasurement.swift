@@ -159,4 +159,17 @@ public struct PoseMeasurement: Equatable, Sendable {
         m.pitchCue[.gocMay] = nil
         return m
     }
+
+    /// GÓC MÁY PHÍA CAMERA LẤY TỪ CẢM BIẾN — độ thật, cùng thang với NHÃN góc của ảnh mẫu. Thay độ nghiêng, nguồn
+    /// `PitchSource.gocMay` và góc nhìn (tính lại theo `goc`). Port đoạn `doAnh.copy(…)` trong
+    /// `CaptureViewModel.onLiveFrame` (Kotlin).
+    ///
+    /// - Parameter goc: góc ngẩng của ống kính đang dùng (camera trước đã đảo dấu), độ.
+    public func gocMayTuCamBien(_ goc: Double, _ vFovDeg: Double) -> PoseMeasurement {
+        var m = self
+        m.tiltDeg = goc
+        m.pitchCue[.gocMay] = goc
+        m.elevationDeg = Measurer.gocNhin(goc, elevationAnchorY, vFovDeg)
+        return m
+    }
 }

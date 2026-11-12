@@ -1,6 +1,6 @@
 # Checklist kiểm trên iPhone thật
 
-> Ghi 12/11/2026. Đã có máy để build nhưng **chưa chạy** — người dùng chưa có thời gian, cho làm tiếp 4c.
+> Ghi 12/11/2026. Đã có máy để build nhưng **chưa chạy** — người dùng chưa có thời gian, cho làm tiếp 4c. Mục D thêm sau 4c.
 > Kiểm xong mục nào thì đánh dấu `[x]` ở đây, cập nhật mục "⏳ Việc chờ iPhone thật" trong `PLAN_PORT_IOS.md`.
 > Mỗi lỗi ghi lại: ảnh chụp màn hình, cách tái hiện, đời máy và bản iOS. App sập → chạy từ Xcode, chép log ở khung debug.
 
@@ -46,12 +46,7 @@ Installed Apps → PoseCoach → **⋯ → Download Container** → chuột ph�
 - [ ] `recordings/`: video phát đúng chiều
 - [ ] Camera trước: ảnh và video lật gương **giống khung xem trước** lúc quay
 
-### 4–5. Dời sang 4c
-
-- [ ] `verticalFovDeg` trên máy nhiều ống kính (giả định `videoFieldOfView` là góc ở `videoZoomFactor` 1 = ống 0,5x)
-- [ ] Dấu `pitch` / `roll` của `DeviceTilt`
-
-Chưa màn nào hiện hai số này (không thêm code debug tạm) — kiểm qua câu hướng dẫn góc máy sau khi xong 4c.
+### 4–5. Dời sang 4c — xem mục D
 
 ## C. Màn Ảnh mẫu 4b (commit `29f5830`)
 
@@ -64,6 +59,31 @@ Chưa màn nào hiện hai số này (không thêm code debug tạm) — kiểm 
   - [ ] Ảnh chưa chắc → bảng chỉ hỏi câu chưa chắc; **Sửa** hiện đủ câu; **Lưu** → hộp tiêu chí
   - [ ] Vuốt đóng bảng / Huỷ → ảnh **không** nằm lại trong lưới
 - [ ] Nhập ảnh không có người (phong cảnh) → báo từ chối kèm lý do + gợi ý
+
+## D. Màn chụp 4c (hướng dẫn, tự động, chấm điểm)
+
+Vào màn chụp như mục A. Chọn ảnh mẫu toàn thân "người khác chụp" cho các mục chung.
+
+- [ ] Có màn chờ "đang phân tích ảnh mẫu" 1–2 s trước khi vào camera; ảnh mẫu hỏng → dòng ⚠ đỏ, không treo
+- [ ] Dòng trạng thái góc trên trái đổi "thấy / không thấy mẫu"; bấm vào → bảng số liệu (Template, Landmarks…)
+- [ ] Danh sách tiêu chí + % giống mẫu **sống**: dấu tích đổi khi di chuyển; mỗi lúc chỉ **một** câu hướng dẫn
+- [ ] **Dấu góc máy (`DeviceTilt`)**: giơ máy cao chúc xuống → câu bảo HẠ máy; hạ thấp ngửa lên → câu bảo NÂNG máy. Ngược
+  là dấu `pitch` sai. Nghiêng máy sang một bên → câu chỉnh nghiêng đúng chiều (dấu `roll`)
+- [ ] **`verticalFovDeg`** (máy nhiều ống kính): đứng yên, đổi zoom 0.5x ↔ 1x ↔ 2x — câu cao/thấp không được nhảy lung
+  tung chỉ vì đổi zoom
+- [ ] Cầm ngang khi ảnh mẫu dọc → cảnh báo xoay máy chặn trước mọi câu khác; zoom lệch → cảnh báo, bấm vào → về 1x
+- [ ] Chip zoom 0.5 / 1 / 2; kéo ngang trên dãy chip → thước chi tiết, thả tay ~1,6 s thì thu lại; chụm hai ngón zoom được
+- [ ] Nút Khung 3:4 → 9:16 → 1:1 → Full (khoá khi đang quay); nút Lưới bật/tắt 3×3
+- [ ] Xong các bước góc máy → vạch đặt người hiện ra + câu "đặt người vào vạch" vài giây; chấm chạm vạch thì xanh
+- [ ] Tự động: đủ điều kiện → giữ ~0,8 s → đếm 3-2-1 → tự chụp; rung tay ngắn không huỷ đếm; nút chụp tay vẫn bấm được
+- [ ] Chụp liên tục → màn "Đang xử lý" có % → về tab Ảnh mẫu (màn xem lại là 4d). Container: `Library/Caches/burst/`
+  **trống**, `Library/Caches/shots/<phiên>/` có ≤ 5 ảnh + `index.csv`
+- [ ] Quay video ≥ 3 s → dừng → xử lý → `Library/Caches/recordings/` **trống** (video thô đã xoá)
+- [ ] Ảnh mẫu selfie → mở camera trước; ảnh `mirror-…` → camera sau chế độ gương; ảnh `tripod-…` → camera trước, **tự
+  động bật sẵn**, có giai đoạn đặt máy (đặt máy đúng góc trước, rồi mới mời ra đứng vào khung)
+- [ ] Ảnh mẫu chân dung (mặt to): hướng mặt được hướng dẫn (đường nhận diện mặt live), camera trước không bị ngược chiều
+  trái/phải
+- [ ] Chụp liên tục mà không có người trong khung → báo lỗi rõ ràng, **chụp lại được ngay** (không bị khoá nút)
 
 ## Còn treo bên Android (đã báo người dùng, chưa kiểm)
 

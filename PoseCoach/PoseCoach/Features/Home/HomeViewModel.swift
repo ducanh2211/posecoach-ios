@@ -13,7 +13,7 @@ import SwiftUI
 ///  2. **CỔNG KIỂM ẢNH 3 MỨC** chạy TRƯỚC khi vào màn camera — không có đường vào camera nào khác.
 @Observable @MainActor final class HomeViewModel {
 
-    private static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "PoseCoach", category: "HomeViewModel")
+    nonisolated private static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "PoseCoach", category: "HomeViewModel")
 
     /// Kết quả cổng kiểm của một ảnh mẫu, để hiện hộp thoại.
     struct Gate: Identifiable {

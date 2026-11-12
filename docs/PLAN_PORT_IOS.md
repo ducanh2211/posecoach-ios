@@ -24,7 +24,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
-| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | 🔶 4a, 4b xong | 12/11/2026 |
+| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | 🔶 4a, 4b, 4c xong (4c chờ kiểm iPhone) | 12/11/2026 |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
 
@@ -551,12 +551,38 @@ Test: `StringsParityTest` → mới trong `PoseCoachTests`: mọi key có `en` +
 | `capture/MocLuoiOverlay.kt` | 166 | `MocLuoiOverlay.swift` | Mốc lưới hiện **sau** các bước góc máy (FG 110) |
 | `capture/ShotSession.kt` | 270 | `ShotSession.swift` | Nối đo → chấm → giữ → xoá. Face chạy ở độ phân giải cao trong `finish()` trên ≤ 12 khung (FG 30) |
 
-- [ ] Hướng dẫn đi đúng thứ tự bước; mỗi lúc 1 câu; nút chụp tay **luôn hiện**
-- [ ] Chip Tự động / Thủ công; tự động: đủ điều kiện → giữ ổn định → đếm 3 s → **chụp / quay khi đếm xong**
-- [ ] Mục không đo được quá 2,5 s → câu "chưa đo được"; chế độ tự động bỏ qua bước kẹt sau 6 s
-- [ ] Nút Khung 3:4 → 9:16 → 1:1 → Full, lưới 3×3, zoom 0.5x/1x/2x
-- [ ] Bốn chế độ chụp chạy được, chế độ đặt máy có hai giai đoạn
-- [ ] Video thô bị xoá ngay sau khi cắt xong ảnh
+- [ ] Hướng dẫn đi đúng thứ tự bước; mỗi lúc 1 câu; nút chụp tay **luôn hiện** — code xong, chờ iPhone
+- [ ] Chip Tự động / Thủ công; tự động: đủ điều kiện → giữ ổn định → đếm 3 s → **chụp / quay khi đếm xong** — chờ iPhone
+- [ ] Mục không đo được quá 2,5 s → câu "chưa đo được"; chế độ tự động bỏ qua bước kẹt sau 6 s — logic ở engine
+  (test 2b), chờ iPhone
+- [ ] Nút Khung 3:4 → 9:16 → 1:1 → Full, lưới 3×3, zoom 0.5x/1x/2x — chờ iPhone
+- [ ] Bốn chế độ chụp chạy được, chế độ đặt máy có hai giai đoạn — chờ iPhone
+- [x] Video thô bị xoá ngay sau khi cắt xong ảnh — `ChamDiemTests` (3): chụp liên tục 8 tấm và quay video (dựng từ ảnh
+  mẫu thật) đi trọn đường chấm → phiên ≤ 5 ảnh + bảng kê khớp, **nguồn bị xoá**; thiếu hồ sơ thì báo lỗi + xoá nguồn.
+  53/53 PoseCoachTests, 263/263 PoseDomain (12/11/2026)
+- Các mục chờ máy ghi ở `docs/CHECKLIST_KIEM_IPHONE.md` mục D.
+
+**Đã làm (12/11/2026)** — khác plan / Kotlin:
+- File: `CaptureView` + `Views/` (`CameraControls`, `CaptureSwitches`, `ZoomBar` + thước loga, `MocLuoiOverlay`,
+  `LuoiBaPhan`, `ProcessingView`, `TemplateAnalyzingView`, `DebugPanel`, `SkeletonOverlay`), `CaptureViewModel` +
+  `CaptureViewModel+ChamDiem` (`processRecording` / `processBurst` của `CaptureScreen.kt`), `CaptureUiState`,
+  `ShotSession` (`finish` nhận `highRes` dạng `async` vì `VideoFrameSource.frameAt` là `async`).
+- **ViewModel tạo mới mỗi lần vào màn** → không cần `startFresh()` (FG 23, 90, 114 không áp dụng); vẫn xoá
+  `finishedSession` sau khi dùng. Vòng đời camera / cảm biến (~30 Hz) / đếm ngược tự động (100 ms, `AutoCountdown`
+  ở PoseDomain) / đồng hồ quay nằm trong ViewModel thay vì `LaunchedEffect`.
+- Nhận diện mặt live: `Services/FaceDetection/LiveFaceTracker` (= khối `faceLive`, `FACE_NHIP_MS 300`, không chạy
+  chồng); `PoseDetector` thêm `onFrame` (= `onFrameBitmap`). Khung lấy từ pool nên CHÉP ra trước khi rời luồng camera.
+  Qua `MLKitLock` cùng `ShotSession`.
+- `PoseMeasurement.gocMayTuCamBien` (PoseDomain, có test) thay đoạn `doAnh.copy(tiltDeg = …, pitchCue + …,
+  elevationDeg = …)` — thuộc tính `internal(set)` nên app không tự sửa được.
+- **Bỏ** dòng số đo `⚠️ TẠM` + GeoCalib trên màn chụp (D7). Giữ `DebugPanel` (công cụ chỉnh ngưỡng, nhãn tiếng Anh viết
+  thẳng như Kotlin). Icon thư viện / xoay camera dùng SF Symbols (Kotlin tự vẽ Canvas vì không có thư viện icon).
+- Không có nhánh `catch (Throwable)` khi chấm — hàm Swift ở đây không ném lỗi; mọi nhánh hỏng có câu báo riêng.
+- ⚠️ **Sửa lệch có chủ ý**: `onProcessingFailed` đặt lại `burstTaken = 0`. Kotlin giữ nguyên → chấm loạt ảnh hỏng
+  (vd. "không thấy người") thì nút chụp (`burstTaken == 0`) và công tắc chế độ khoá luôn tới khi rời màn. **Nghi lỗi
+  Android — đã báo người dùng.**
+- Chấm xong: màn xem lại chưa có (4d) → tạm về tab Ảnh mẫu; phiên nằm ở `Caches/shots/`, `sweepOrphans` dọn ở lần mở
+  app sau. Nút thư viện → tab Thư viện.
 
 ⏸ **Điểm dừng 4c**
 

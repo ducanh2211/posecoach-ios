@@ -45,9 +45,15 @@ struct RootView: View {
         .fullScreenCover(item: $route) { r in
             switch r {
             case let .capture(template):
-                // Đóng màn chụp → về tab Ảnh mẫu (như `onBack = { screen = Screen.Templates }`).
-                CaptureView(template: template)
-                    .onDisappear { tab = .templates }
+                CaptureView(
+                    template: template,
+                    // "Đổi mẫu" → về tab Ảnh mẫu (như `onBack = { screen = Screen.Templates }`).
+                    onBack: { tab = .templates; route = nil },
+                    // Màn xem lại port ở 4d. Tới đó chấm xong thì về tab Ảnh mẫu; phiên nằm trong `Caches/shots/` và bị
+                    // `ShotStore.sweepOrphans` dọn ở lần mở app sau.
+                    onFinished: { _ in tab = .templates; route = nil },
+                    onOpenLibrary: { tab = .library; route = nil }
+                )
             }
         }
     }

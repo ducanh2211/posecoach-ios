@@ -59,6 +59,9 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
     /// Gọi mỗi khi có kết quả. Chạy trên hàng đợi riêng của MediaPipe, KHÔNG phải luồng giao diện.
     private let onResult: (PoseFrame, InferenceStats) -> Void
     private let onError: (UiText) -> Void
+    /// Khung đã dựng đứng vừa đưa vào nhận diện (như `onFrameBitmap` của Kotlin) — cho đường nhận diện mặt thời gian
+    /// thực. Gọi trên luồng camera. ⚠️ Bộ đệm lấy từ pool, khung sau ghi đè lên — muốn giữ lại thì phải CHÉP ngay.
+    private let onFrame: ((CVPixelBuffer) -> Void)?
 
     private var landmarker: PoseLandmarker?
 
@@ -86,11 +89,13 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
     init(
         config: Config = Config(),
         onResult: @escaping (PoseFrame, InferenceStats) -> Void,
-        onError: @escaping (UiText) -> Void
+        onError: @escaping (UiText) -> Void,
+        onFrame: ((CVPixelBuffer) -> Void)? = nil
     ) {
         self.config = config
         self.onResult = onResult
         self.onError = onError
+        self.onFrame = onFrame
     }
 
     var isReady: Bool {
@@ -150,6 +155,7 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
                 return
             }
             image = try MPImage(pixelBuffer: upright, orientation: .up)
+            onFrame?(upright)
         } catch {
             Self.log.error("Không đọc được khung hình camera: \(error.localizedDescription, privacy: .public)")
             return
