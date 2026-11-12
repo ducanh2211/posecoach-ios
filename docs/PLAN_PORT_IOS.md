@@ -23,7 +23,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
-| 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | 🔶 3a xong · 3b code xong, chờ kiểm iPhone | 12/11/2026 |
+| 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
@@ -439,6 +439,31 @@ hướng GIAO DIỆN) + `CameraPermission`; `Extensions/UiText+Resolve` (kéo t�
 Test (`PoseCoachTests`): `LocaleCsvTest` (3) · `LuuAlbumTest` (2) + mới: ảnh EXIF xoay vào đúng chiều; `FaceAnalyzer` ra
 `FaceInfo` trên ảnh chân dung; GeoCalib chạy trên 5 ảnh mẫu, ghi `pitch` / `vfov` làm mốc cho 6a; model không nạp được →
 có log + trả `nil`, không treo.
+
+- [x] 44/44 PoseCoachTests xanh (12/11/2026): `LocaleCsvTests` (3) · `LuuAlbumTests` (2) · `ShotStoreTests` (3) ·
+  `SharpnessTests` (2) · `VideoFrameSourceTests` (4, **quay bằng `VideoRecorder` rồi đọc lại**: xoay 90°, lật gương, góc 0°,
+  file hỏng) · `FaceAnalyzerTests` (3) · `GeoCalibGocMayTests` (4)
+- [x] Mốc cho 6a: `docs/moc/3c-geocalib-anh-mau.tsv` (5 ảnh — `duoi` +28°, `ngang` ≈ 0°, `tren` −36°, khớp nhãn tên
+  file; ~2,5 s/ảnh trên Mac) · `docs/moc/3c-mat-anh-mau.tsv` (ML Kit thấy mặt 61/114 ảnh nguyên cỡ)
+- [ ] 6a: so `3c-mat-anh-mau.tsv` với Android — **4/9 ảnh selfie không thấy mặt** (`selfie-duoi-nen-troi-xanh`,
+  `selfie-ngang-male-013`, `selfie-tren-female-012`, `selfie-tren-male-003`); chân dung lấy hướng mẫu từ mặt, nên Android
+  thấy mà iOS không là lệch hành vi mục 1
+
+**Đã làm (12/11/2026)** — khác Kotlin:
+- `VideoFrameSource`: `AVAssetImageGenerator` (lấy khung theo mốc thời gian + tự áp `preferredTransform`, kể cả phép lật
+  của video camera trước) — tương đương 1-1 `MediaMetadataRetriever`, thay cho `AVAssetReader` plan ghi. Hai bộ sinh:
+  khung khoá gần nhất (`OPTION_CLOSEST_SYNC`) và đúng khung (`OPTION_CLOSEST`). API `async`.
+- `MediaLibrary+Files` là **extension của `PoseDomain.MediaLibrary`** (cùng tên như Kotlin, không trùng type). Chép ảnh
+  soạn sẵn ra `Application Support/templates/` một lần có file đánh dấu `v10` — đúng như Kotlin, để ảnh người dùng xoá
+  không tự mọc lại (FG 32); plan cũ ghi "quét bundle" thì không xoá được ảnh soạn sẵn. Gọi `seedBuiltInTemplates` ở 4b.
+- Thư mục: tạm (`shots/`, `burst/`, `recordings/`) → `Library/Caches/`; giữ lâu (`templates/`, `thu-vien/`) →
+  `Application Support/`. Dọn `sweepOrphans` + `sweepRecordings` trong `PoseCoachApp.init` (như `MainActivity.onCreate`;
+  Kotlin cũng không gọi `sweepBurst` lúc mở — loạt cũ bị xoá trước loạt mới).
+- `FaceAnalyzer`: không có hẹn giờ 3 s / `close()` (ML Kit iOS đồng bộ sẵn, tự giải phóng). Đường camera thời gian thực
+  (nhận `CMSampleBuffer` + hướng, FG 30/71) thêm ở 4c.
+- `Sharpness` / `GeoCalibGocMay` thu nhỏ bằng Core Graphics `.low` (song tuyến), không dùng Accelerate; GeoCalib vẫn
+  từng nấc một nửa như Android. Thứ tự 4 đầu ra lấy theo `outputNames()` của phiên (như `ra.get(0..3)`).
+- `ResultLibrary`: chưa có lưu vào Photos (Kotlin cũng không ở file này) — làm ở 4d.
 
 ⏸ **Điểm dừng 3c = hết Phase 3**
 

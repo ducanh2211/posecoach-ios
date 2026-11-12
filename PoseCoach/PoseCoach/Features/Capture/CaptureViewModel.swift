@@ -163,7 +163,7 @@ import PoseDomain
         guard let c = controller, state.cameraReady else { return }
         if state.burstMode {
             guard !bursting else { return }
-            let dir = Self.workDir("burst")
+            let dir = ShotStore.burstDir()
             // Xoá loạt cũ trước khi chụp loạt mới, nếu không ảnh của hai lần chụp lẫn vào nhau.
             try? FileManager.default.removeItem(at: dir)
             bursting = true
@@ -177,8 +177,7 @@ import PoseDomain
             guard state.canStop else { return }
             c.stopRecording()
         } else {
-            let dir = Self.workDir("recordings")
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let dir = ShotStore.recordingsDir()
             let target = dir.appendingPathComponent("rec-\(Int64(Date().timeIntervalSince1970 * 1000)).mp4")
             c.startRecording(outputFile: target) { [weak self] done in self?.onRecordingStopped(done) }
             onRecordingStarted()
@@ -216,12 +215,5 @@ import PoseDomain
         // Bước 4c: chấm điểm video (`processRecording` → `ShotSession`) rồi XOÁ video thô. Tới đó video nằm ở
         // `Caches/recordings/`.
         if let video { Self.log.info("Quay xong: \(video.lastPathComponent, privacy: .public)") }
-    }
-
-    // MARK: - Tệp tạm
-
-    /// Thư mục làm việc tạm (ảnh chụp liên tục, video thô) — cùng tên thư mục với Android.
-    private static func workDir(_ name: String) -> URL {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
     }
 }
