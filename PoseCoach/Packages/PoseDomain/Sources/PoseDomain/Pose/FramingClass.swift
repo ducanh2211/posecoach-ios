@@ -143,4 +143,4 @@ public enum ElevationAnchor: Sendable {
 
 public enum CenterAnchor: Sendable { case torsoCenter, shoulderCenter, faceCenter }
 public enum YawSource: Sendable { case body3d, faceYaw }
-public enum PoseGroup: Sendable { case spine, head, arms, legs }
+public enum PoseGroup: CaseIterable, Sendable { case spine, head, arms, legs }

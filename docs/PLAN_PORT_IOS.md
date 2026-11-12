@@ -21,7 +21,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | Phase | Nội dung | Trạng thái | Ngày |
 |---|---|---|---|
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
-| 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | 🔶 1a xong | 12/11/2026 |
+| 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | 🔶 1a, 1b xong | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ⬜ | |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
@@ -160,8 +160,11 @@ ngoài khung, người ngồi FG 42, nửa người đáy 0,90 FG 14). `TestStri
 
 Test: `PerspectiveValueTest` (5) · `HieuChinhGocAnhTest` (4).
 
-- [ ] Xanh
-- [ ] Đối chiếu tay 3 phép đo: cùng input → in kết quả Swift, so với kỳ vọng trong test Kotlin tới chữ số cuối
+- [x] Xanh (27 test cộng dồn) — 12/11/2026. Tách 2 file: `PoseMeasurement.swift` (kiểu dữ liệu) + `Measurer.swift` (hàm đo)
+- [x] Đối chiếu tay 3 phép đo (phối cảnh `torsoAnkle`, góc máy `gocMay`, nghiêng `spine`) × 3 ảnh thật của
+  `PerspectiveValueTest`: Swift so với bản tính độc lập bằng Python viết lại từ công thức Kotlin — 8/9 trùng 17 chữ số,
+  1 lệch 3,6e-16 (`math.hypot` của Python tự cài thuật toán). ⚠️ Chưa so được với JVM (máy không có Java runtime) —
+  `Math.log/atan2/hypot` của Java có thể lệch 1 ulp so với libm của Apple; vô hại với mọi ngưỡng.
 
 ⏸ **Điểm dừng 1b**
 
