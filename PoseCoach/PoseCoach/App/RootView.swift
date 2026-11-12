@@ -8,15 +8,20 @@ struct RootView: View {
     }
 
     @State private var selectedTab: Tab = .templates
+    /// Mở màn chụp. Tạm vào thẳng từ tab Ảnh mẫu (chưa có ảnh mẫu) — 4b thay bằng lưới ảnh mẫu + cổng kiểm.
+    @State private var showCapture = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                VStack {
+                VStack(spacing: 16) {
                     Text(LocalizedStringKey("tab_templates"))
                         .font(.title2)
                         .foregroundStyle(.secondary)
+                    Button(LocalizedStringKey("gate_start")) { showCapture = true }
+                        .buttonStyle(.borderedProminent)
                 }
+                .fullScreenCover(isPresented: $showCapture) { CaptureView() }
                 .navigationTitle(Text(LocalizedStringKey("tab_templates")))
             }
             .tabItem {

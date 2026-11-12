@@ -361,8 +361,8 @@ ra 🔴/🟡/🟢 — lưu bảng kết quả làm mốc cho Phase 6a.
 
 - [ ] iPhone: khung xương chồng khít ở cầm dọc **và** ngang, camera trước và sau
 - [ ] Burst 8 ảnh đúng hướng; video 3–30 s đúng hướng, xoá được
-- [ ] Dấu `pitch` / `roll` khớp quy ước Android (in số khi ngửa / chúc / vẹo máy)
-- [x] Build xanh; `VideoRecorderTests` (transform xoay/lật video) xanh — 18/18 PoseCoachTests, 261 PoseDomain
+- [ ] Dấu `pitch` / `roll` khớp quy ước Android — **dời sang 4c** (cần câu hướng dẫn mục 4)
+- [x] Build xanh; `VideoRecorderTests`, `UiTextResolveTests` xanh — 23/23 PoseCoachTests, 261 PoseDomain
 
 **Đã làm (12/11/2026)** — `Services/Camera/CaptureController.swift`, `VideoRecorder.swift`,
 `Services/Motion/DeviceTilt.swift`, `CMMotionManager+Shared.swift`; `UprightPixelBuffer` / `PoseDetector.detect` thêm
@@ -386,6 +386,19 @@ ra 🔴/🟡/🟢 — lưu bảng kết quả làm mốc cho Phase 6a.
   dành cho `DeviceTilt` (một `CMMotionManager` cho cả app).
 - `stop()`: tắt cảm biến → dừng quay → gỡ delegate → `stopRunning` + gỡ input/output → chờ hai hàng đợi khung chạy hết
   (FG 11). Lỗi phiên lúc chạy (`runtimeErrorNotification`) báo `camera_err_open`.
+
+**Lõi màn chụp kéo sớm từ 4c để kiểm 3b (người dùng chọn 12/11/2026 — code thật, không phải màn debug):**
+`Features/Capture/CaptureView` + `CaptureViewModel` + `CaptureUiState` (mới phần camera) + `SkeletonOverlay`;
+`Services/Camera/CameraPreviewView` (`AVCaptureVideoPreviewLayer`, nằm ở Services vì import AVFoundation; xoay theo
+hướng GIAO DIỆN) + `CameraPermission`; `Extensions/UiText+Resolve` (kéo từ 4a). Vào tạm bằng nút `gate_start` ở tab
+Ảnh mẫu — 4b thay bằng lưới ảnh mẫu + cổng kiểm. Ảnh / video nằm ở `Caches/burst/`, `Caches/recordings/`; nối
+`ShotSession` (chấm điểm, xoá video thô) ở 4c. Khác Android:
+- Giao diện nằm ngang thì ô xem trước cũng nằm ngang (`1/tiLe`) cho trùng phép cắt `theoHuong`. ⚠️ Android dùng
+  `fillMaxWidth().aspectRatio(tiLe)` → ô DỌC trong giao diện ngang, trong khi khung đo bị cắt NGANG — nghi khung xương
+  lệch khi cầm ngang bên Android (chưa kiểm, đã báo người dùng).
+- `UiText.resolved`: Java `%d` không nhóm hàng nghìn, `String(format:locale:)` thì có → chỉ dùng locale khi có số thực
+  (`UiTextResolveTests`).
+- Dấu `pitch` / `roll`: chưa có chỗ hiện trên màn (D7 cấm in số) → kiểm ở 4c qua câu hướng dẫn mục 4.
 
 **Cần kiểm trên iPhone (chưa đo được trên Mac):** bảng `orientationForAnalysis` cho **camera trước** (giả định
 `videoRotationAngle` cùng nghĩa cho hai camera); `videoFieldOfView` của thiết bị nhiều ống là góc ở `videoZoomFactor` 1
