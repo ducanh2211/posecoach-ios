@@ -22,7 +22,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 |---|---|---|---|
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
-| 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | 🔶 2a, 2b xong | 12/11/2026 |
+| 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
@@ -279,7 +279,18 @@ Test: `HuongDanTuanTuTest` (3) · `MatchPercentTest` (5) · `MirrorSelfieTest` (
 
 Test: `BestShotBufferTest` (13) · `GiaiPhoiCanhTest` (5) · `SceneMatchingTest` (7) · `SceneVocabularyTest` (8).
 
-- [ ] Xanh — tổng Phase 1 + 2: **258 test** · `grep` import rỗng
+- [x] Xanh — tổng Phase 1 + 2: **261 test** (69 + 75 + 84 + 33) — 12/11/2026 · `grep` import rỗng · không cảnh báo
+  build. Số 258 ghi trước đây cộng sai; 261 khớp dòng Phase 2 = 192 ở bảng test cuối plan.
+- Test dùng `java.util.Random(seed)` (`BestShotBufferTest`, `GiaiPhoiCanhTest`) → `Support/JavaRandom.swift` chép đúng
+  LCG 48 bit của Java; đã đối chiếu `Random(42)` / `Random(1)` `.nextDouble()` khớp từng chữ số.
+- Sắp xếp **ổn định** như `sortedWith` của Kotlin (`sort` của Swift không hứa giữ thứ tự khi hoà):
+  `ShotCandidate.sortedBestFirst` (thay `BEST_FIRST` + `sortedWith`, dùng lại ở Phase 3 `ShotSession` / màn kết quả) và
+  bản riêng trong `SceneMatching`. Khung yếu nhất bị đá ra theo **vị trí** (Kotlin so `===`), không theo giá trị.
+- `PD/Scene/SceneMatch.swift` giữ cả `SceneTag` / `SceneFrame` / `SceneTemplate` / `SceneMatch` / `SceneMatching` như file
+  Kotlin. `SceneTag.titleRes` là key String Catalog; `SceneTemplate.file` là `URL`.
+- `SceneVocabulary`: từ điển là **mảng** theo thứ tự khai báo (`mapOf` của Kotlin giữ thứ tự): trùng khoá có dấu thì
+  mục SAU thắng (`associateBy`), trùng khoá không dấu thì mục TRƯỚC thắng (`groupBy().first()`). So "đã là chữ không
+  dấu" bằng `unicodeScalars` vì `==` của Swift so tương đương chuẩn Unicode; độ dài từ đếm UTF-16 như Kotlin.
 
 ⏸ **Điểm dừng 2c = hết Phase 2**
 
