@@ -30,6 +30,23 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 
 Ký hiệu: ⬜ chưa làm · 🔶 đang làm · ✅ xong · ⛔ bị chặn (ghi lý do)
 
+### ⏳ Việc chờ iPhone thật — nhắc ngay khi có máy
+
+**3b (camera + cảm biến) chưa kiểm trên iPhone** — 12/11/2026 chưa có máy, người dùng cho làm tiếp 3c. Code ở commit
+`b7df6d3` + `f662454`. Mac (Designed for iPad) không thử được camera sau, xoay máy, cảm biến. Mở app → tab Ảnh mẫu →
+nút **Start shooting**:
+
+- [ ] Khung xương chồng khít khi cầm dọc + ngang, camera sau + trước. **Camera trước cầm ngang** lộn 180° = bảng
+  `CaptureController.orientationForAnalysis` sai cho camera trước (đang giả định `videoRotationAngle` cùng nghĩa hai camera)
+- [ ] Chụp liên tục đủ 8 ảnh; video chỉ dừng được sau 3 s, tự dừng ở 30 s
+- [ ] Xcode → Devices → app → Download Container → `Library/Caches/burst/`, `Library/Caches/recordings/`: ảnh + video
+  đúng chiều; camera trước lật giống khung xem trước
+- [ ] `verticalFovDeg` trên máy nhiều ống kính (giả định `videoFieldOfView` là góc ở `videoZoomFactor` 1 = ống 0,5x)
+- [ ] Dấu `pitch` / `roll` của `DeviceTilt` — dời sang 4c (kiểm qua câu hướng dẫn mục 4)
+
+Chi tiết + lệch so với Kotlin: mục **Bước 3b** bên dưới. Còn treo bên Android (đã báo người dùng, chưa kiểm): ô xem
+trước DỌC khi giao diện ngang trong khi khung đo cắt NGANG.
+
 ---
 
 ## Nguồn sự thật — tin cái gì khi chúng nói khác nhau

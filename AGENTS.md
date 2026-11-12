@@ -248,6 +248,11 @@ Nhiều cách giải → liệt kê ngắn kèm trade-off để dev quyết.
 
 ---
 
+## ⏳ Việc chờ iPhone thật
+
+Checklist kiểm camera 3b chưa chạy (chưa có máy, 12/11/2026) — xem mục **"⏳ Việc chờ iPhone thật"** trong
+`docs/PLAN_PORT_IOS.md`. Nhắc người dùng ngay khi họ nói đã có iPhone / sắp test máy thật.
+
 ## ⏰ Việc treo — nhắc lại khi nói tới phát hành / TestFlight / App Store
 
 - **Bundle ID** hiện là `com.anhtran.PoseCoach` (mặc định lúc tạo project). Xác nhận định danh
