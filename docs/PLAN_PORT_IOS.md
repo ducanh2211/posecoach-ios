@@ -24,7 +24,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
-| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | 🔶 4a xong | 12/11/2026 |
+| 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | 🔶 4a, 4b xong | 12/11/2026 |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
 
@@ -512,8 +512,31 @@ Test: `StringsParityTest` → mới trong `PoseCoachTests`: mọi key có `en` +
 | `home/NhanDienNhap.kt` | 157 | `NhanDienNhap.swift` | Gọi **3 thứ**: `PhanTichAnhMau` + **ML Kit ImageLabeling** (nhãn ≥ 0,2; "Mobile phone" ≥ 0,5 → gương) + **GeoCalib**. Chắc chắn (`abs(abs(pitch) − 15) ≥ 4`) → vào thẳng, không hỏi. Ngưỡng giữ trong file này (D8) |
 | `home/PhanTichAnhMau.kt` | 81 | `PhanTichAnhMau.swift` | Ảnh mẫu → `TemplateProfile` (một lần) |
 
-- [ ] 🔴 bị chặn có lý do + việc cần làm; 🟡 vào được kèm cảnh báo; **không đường nào vào camera mà không qua cổng**
-- [ ] Ảnh tự nhập và ảnh soạn sẵn đi qua **cùng một cổng**; ảnh nhập được đổi tên theo nhãn (`ganNhan`)
+- [x] 🔴 bị chặn có lý do + việc cần làm; 🟡 vào được kèm cảnh báo; **không đường nào vào camera mà không qua cổng**
+  (`RootView` chỉ mở màn chụp qua `HomeView.onPickTemplate`; nút tạm `gate_start` đã gỡ)
+- [x] Ảnh tự nhập và ảnh soạn sẵn đi qua **cùng một cổng**; ảnh nhập được đổi tên theo nhãn (`ganNhan`)
+- [x] `HomeFlowTests` (4): mốc nhóm góc ±15°, nhận diện trọn một ảnh cài sẵn (qua cổng, 4 bước tiến độ, GeoCalib đo
+  được), gắn bù nhãn góc bỏ qua ảnh cài sẵn, chế độ chụp theo nhóm ảnh mẫu + xoay camera. 50/50 PoseCoachTests,
+  261/261 PoseDomain (12/11/2026)
+- [ ] Nhìn tận mắt trên My Mac / iPhone: lưới, lọc, nhập ảnh (tự vào thẳng + mở bảng), popup %, hộp cổng kiểm
+
+**Đã làm (12/11/2026)** — khác plan / Kotlin:
+- File thêm: `TemplateGridCell` (ô lưới, tải thumbnail theo ô qua `Services/Media/ThumbnailCache` — NSCache giới hạn
+  64 MB theo **số byte**, giải mã đúng cỡ ô; = Coil của Android, FG 111), `GateSheet` (hộp nhận ảnh),
+  `Services/ImageLabeling/ImageLabels` (ML Kit, ngưỡng 0,2). `TemplateProfile.thuTuHoSo` đổi sang `public`.
+- Hộp **nhận** ảnh là bảng kéo lên (nội dung dài, cần cuộn) thay `AlertDialog`; hộp **từ chối** vẫn là alert, chỉ có
+  nút đóng. Nút "Tìm theo bối cảnh" chưa có — màn Scene ở Phase 5.
+- `NhapAnhSheet` luôn nhận kết quả tự nhận diện (`truoc`): Home lúc nào cũng nhận diện trước khi mở bảng, nên nhánh tự
+  phân tích lại trong bảng của Kotlin không bao giờ chạy — không port. Đổi tên file (`ganNhan`) do ViewModel làm.
+- Photo Picker của hệ thống (`preferredItemEncoding: .compatible` → JPEG), không cần xin quyền thư viện ảnh.
+- ⚠️ **Mở hộp nối tiếp**: SwiftUI bỏ qua lệnh mở màn / hộp mới khi hộp cũ đang đóng dở (cổng kiểm → màn chụp, popup
+  chờ → bảng gắn nhãn, bảng → Photo Picker). `HomeViewModel.sauKhiDong` giữ việc tiếp theo, chạy ở `onDismiss`.
+- ⚠️ **ML Kit chạy chồng nhau thì SẬP** (`EXC_BAD_ACCESS` trong XNNPACK, hai `FaceAnalyzer` khác nhau trên hai luồng —
+  lộ ra khi test nhận diện chạy song song test mặt). Thêm `Services/MLKit/MLKitLock`: mọi `results(in:)` của
+  `FaceAnalyzer` + `ImageLabels` xếp hàng. Android không gặp (ML Kit Android tự xếp hàng). 4c: đường mặt live cũng
+  phải qua khoá này.
+- `CaptureView(template:)`: nhóm ảnh mẫu quyết định chế độ lúc mở (selfie → cam trước, gương → gương, người khác chụp,
+  đặt máy) và chế độ khi xoay camera (`cheDoCamSau` / `cheDoCamTruoc`) — kéo sớm từ 4c vì route đã mang ảnh mẫu.
 
 ⏸ **Điểm dừng 4b**
 

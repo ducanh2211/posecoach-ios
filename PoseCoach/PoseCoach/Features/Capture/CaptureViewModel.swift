@@ -32,6 +32,29 @@ import PoseDomain
     /// Bộ điều khiển camera để khung xem trước gắn vào. View CHỈ dùng nó cho `CameraPreviewView`.
     var previewSource: CaptureController? { controller }
 
+    /// Ảnh mẫu đã qua cổng kiểm.
+    let template: URL
+    /// Chế độ camera SAU của ảnh mẫu này — nút xoay camera quay về đây khi rời camera trước. Ảnh mẫu gương thì về chế độ
+    /// gương, còn lại về người khác chụp.
+    @ObservationIgnored private let cheDoCamSau: ShootMode
+    /// Chế độ camera TRƯỚC: ảnh mẫu đặt máy thì về đặt máy, còn lại selfie.
+    @ObservationIgnored private let cheDoCamTruoc: ShootMode
+
+    /// NHÓM CỦA ẢNH MẪU QUYẾT ĐỊNH CHẾ ĐỘ CHỤP — không có hàng nút chọn chế độ (gỡ 13/09/2026, yêu cầu PO), chỉ còn nút
+    /// xoay camera trước/sau.
+    init(template: URL) {
+        self.template = template
+        let kind = MediaLibrary.TemplateKind.of(template.lastPathComponent)
+        cheDoCamSau = kind == .mirror ? .tuChupGuong : .nguoiKhac
+        cheDoCamTruoc = kind == .tripod ? .datMay : .tuChupCamTruoc
+        state.mode = switch kind {
+        case .selfie: .tuChupCamTruoc
+        case .mirror: .tuChupGuong
+        case .photographer: .nguoiKhac
+        case .tripod: .datMay
+        }
+    }
+
     // MARK: - Quyền + vòng đời camera
 
     /// Màn hiện ra. Có quyền thì mở camera ngay.
@@ -151,8 +174,7 @@ import PoseDomain
     /// Đổi camera trước/sau. Báo bộ điều khiển TRƯỚC rồi mới đổi trạng thái.
     func flipCamera() {
         guard !state.recording, !bursting else { return }
-        // Chưa có ảnh mẫu (4c chọn theo loại ảnh mẫu): camera sau = người khác chụp, camera trước = selfie.
-        let next: ShootMode = state.mode.camTruoc ? .nguoiKhac : .tuChupCamTruoc
+        let next = state.mode.camTruoc ? cheDoCamSau : cheDoCamTruoc
         controller?.setShootMode(next)
         state.mode = next
         state.pose = .empty

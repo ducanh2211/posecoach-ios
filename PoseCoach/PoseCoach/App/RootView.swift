@@ -12,12 +12,12 @@ struct RootView: View {
 
     /// Màn mở đè lên các tab. Màn xem lại thêm ở 4d.
     enum Route: Identifiable {
-        /// Bước 4b truyền ảnh mẫu đã qua cổng kiểm.
-        case capture
+        /// Ảnh mẫu đã qua cổng kiểm.
+        case capture(template: URL)
 
         var id: String {
             switch self {
-            case .capture: "capture"
+            case let .capture(t): "capture:\(t.path)"
             }
         }
     }
@@ -29,16 +29,9 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack {
-                placeholder("tab_templates") {
-                    // Tạm vào thẳng màn chụp (chưa có ảnh mẫu) — 4b thay bằng lưới ảnh mẫu + cổng kiểm.
-                    Button(LocalizedStringKey("gate_start")) { route = .capture }
-                        .buttonStyle(.borderedProminent)
-                        .tint(Ds.primary)
-                }
-            }
-            .tabItem { Label(LocalizedStringKey("tab_templates"), systemImage: "photo.on.rectangle.angled") }
-            .tag(Tab.templates)
+            HomeView { route = .capture(template: $0) }
+                .tabItem { Label(LocalizedStringKey("tab_templates"), systemImage: "photo.on.rectangle.angled") }
+                .tag(Tab.templates)
 
             NavigationStack { placeholder("tab_library") { EmptyView() } }
                 .tabItem { Label(LocalizedStringKey("tab_library"), systemImage: "photo.stack") }
@@ -51,15 +44,15 @@ struct RootView: View {
         .tint(Ds.navActive)
         .fullScreenCover(item: $route) { r in
             switch r {
-            case .capture:
+            case let .capture(template):
                 // Đóng màn chụp → về tab Ảnh mẫu (như `onBack = { screen = Screen.Templates }`).
-                CaptureView()
+                CaptureView(template: template)
                     .onDisappear { tab = .templates }
             }
         }
     }
 
-    /// Màn chưa port (Home 4b, Library / Settings Phase 5).
+    /// Màn chưa port (Library / Settings Phase 5).
     private func placeholder<Extra: View>(_ titleKey: String, @ViewBuilder _ extra: () -> Extra) -> some View {
         VStack(spacing: 16) {
             Text(LocalizedStringKey(titleKey))

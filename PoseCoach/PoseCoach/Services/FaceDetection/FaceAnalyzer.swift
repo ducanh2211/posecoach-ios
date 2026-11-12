@@ -12,6 +12,7 @@ import UIKit
 ///  - **Hậu kỳ: mắt nhắm** — ảnh mẫu chớp mắt là ảnh hỏng
 ///
 /// ⚠️ Chạy ĐỒNG BỘ (`results(in:)`) — chỉ gọi từ luồng nền. ML Kit iOS chặn khi gọi trên luồng chính.
+/// Mọi lệnh chạy xếp hàng qua `MLKitLock` — chạy chồng nhau thì sập.
 ///
 /// Khác Android: không có hàm chờ có hạn giờ (`Tasks.await(…, 3 s)`) — `results(in:)` đồng bộ sẵn; không có `close()`
 /// (ML Kit iOS tự giải phóng khi bỏ tham chiếu).
@@ -41,7 +42,7 @@ nonisolated final class FaceAnalyzer: @unchecked Sendable {
         let vision = VisionImage(image: UIImage(cgImage: image))
         vision.orientation = .up
         do {
-            let faces = try detector.results(in: vision)
+            let faces = try MLKitLock.lock.withLock { try detector.results(in: vision) }
             guard let face = faces.max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }) else {
                 return nil
             }

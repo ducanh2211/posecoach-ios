@@ -241,7 +241,7 @@ public struct TemplateProfile: Equatable, Sendable {
 
     /// Thứ tự `from()` thêm tiêu chí vào `active` / `skipped`. Kotlin dùng `LinkedHashSet` / `linkedMapOf` nên
     /// `describe()` liệt kê theo đúng thứ tự này — Swift `Set` / `Dictionary` không giữ thứ tự nên phải ghi rõ.
-    static let thuTuHoSo: [Criterion] = [
+    public static let thuTuHoSo: [Criterion] = [
         .yaw, .scale, .center, .elevation, .roll, .pitch, .perspective, .pose, .sharpness, .eyesOpen, .crop,
     ]
 

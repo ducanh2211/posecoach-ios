@@ -7,7 +7,11 @@ import UIKit
 /// đếm ngược thêm ở bước 4c.
 struct CaptureView: View {
 
-    @State private var vm = CaptureViewModel()
+    @State private var vm: CaptureViewModel
+
+    init(template: URL) {
+        _vm = State(initialValue: CaptureViewModel(template: template))
+    }
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
