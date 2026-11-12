@@ -23,7 +23,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
-| 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
+| 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | 🔶 3a xong | 12/11/2026 |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
@@ -316,6 +316,25 @@ Tuỳ chọn giữ như Android: `numPoses = 1`, CPU delegate, `minPoseDetection
 
 Test (`PoseCoachTests`, My Mac): IMAGE trên **114 ảnh mẫu** → `PoseFrame` 33 điểm hoặc lý do rõ; qua `TemplateGate`
 ra 🔴/🟡/🟢 — lưu bảng kết quả làm mốc cho Phase 6a.
+
+- [x] `PoseCoachTests` xanh 14/14 (4 Phase 0 + 10 của 3a) trên My Mac — 12/11/2026, chạy lại 3 lần không lỗi.
+- [x] Bảng mốc 114 ảnh mẫu: `docs/moc/3a-anh-mau-cong-kiem.tsv` — **109 🟢 · 5 🟡 · 0 🔴**, đủ 33 điểm cả 114 ảnh.
+  🟡: 3 selfie `warn_no_hips` (chest), `duoi-NGOI-ghe-giua-dong` + `tren-gan-kinh-ram-tai-nghe` `warn_leg_toward_lens`.
+  Lớp khung: full 75 · half 22 · knee 14 · chest 3. Phase 6a đối chiếu với bản Android.
+- ⚠️ **MediaPipe 1.0.0 iOS xử lý `MPImage(…, orientation:)` SAI** với hướng khác `.up` (đo trên cùng ảnh nằm ngang:
+  `.up` tin cậy 0,98; `.right` / `.left` ra khung xương rác; `.down` không thấy ai — cả đường `UIImage` lẫn
+  `CVPixelBuffer`). `PoseDetector` tự xoay điểm ảnh (`UprightPixelBuffer`, Core Image + pool BGRA) rồi đưa `.up` —
+  giống Android tự xoay bitmap. Test `liveXoay` khoá chuyện này. Nên báo bên Android ghi vào FOOTGUNS.
+- `UprightImage` (nơi duy nhất đọc file ảnh, EXIF đủ 8 giá trị) **kéo lên từ 3c** — test 3a phải đọc ảnh mẫu qua
+  đúng đường app dùng. Thu nhỏ theo luỹ thừa của 2 như `inSampleSize`; giải mã bằng ảnh thu nhỏ ImageIO `WithTransform`.
+- `MPImage.rgba` vẽ lại về RGBA 8 bit (tương đương ép `ARGB_8888`).
+- `PoseDetector`: đầu vào `CMSampleBuffer` + hướng; `onError` trả `UiText` (lỗi nạp → `detector_err_load`, lỗi lúc chạy →
+  lời gốc `.raw`, rỗng → `detector_err_unknown`, như Kotlin); **bỏ `onFrameBitmap`** — ML Kit nhận thẳng
+  `CMSampleBuffer` từ tầng camera (3b/3c). Callback kết quả dùng khoá riêng (`statsLock`), không xin khoá chính, để
+  `close()` không chờ chéo với callback dở dang.
+- Mọi type Services khai `nonisolated` (target app mặc định `MainActor`).
+- Ghi nhận 1 lần duy nhất `libc++abi … recursive_mutex lock failed` lúc tiến trình test thoát, khi bài LIVE xoay còn đỏ;
+  không lặp lại sau khi sửa. Theo dõi tiếp ở 3b (đóng bộ nhận diện khi dừng camera — FG 11).
 
 ⏸ **Điểm dừng 3a**
 
