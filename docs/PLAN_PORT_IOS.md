@@ -21,7 +21,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | Phase | Nội dung | Trạng thái | Ngày |
 |---|---|---|---|
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
-| 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ⬜ | |
+| 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | 🔶 1a xong | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ⬜ | |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
@@ -75,6 +75,8 @@ tay che mặt, khoá chủ thể nhiều người, trạng thái `ACQUIRING`.
    Tên test giữ ý (dùng `@Test("…")` cho tên tiếng Việt).
 2. **Giữ nguyên công thức, thứ tự phép tính, tên hằng số, tên type, giá trị hằng số** — kể cả hằng số đang không dùng
    (vd. `PITCH_FACE_ACCEPT`, `PITCH_SPINE_ACCEPT_DEG`) để đối chiếu được. Không "cải tiến", không "sửa cho đúng tài liệu".
+   Tên hằng số / case enum đổi sang lowerCamel theo quy tắc cố định ở AGENTS.md quy tắc 3b (`PITCH_FACE_ACCEPT` →
+   `pitchFaceAccept`) — chốt 12/11/2026.
 3. **Tách phần thuần khỏi framework.** Logic → `PD/`, phần framework → `App/Services/` (Phase 3).
 4. **`public` chỉ cho thứ app gọi** (AGENTS.md quy tắc 2b).
 5. **Đọc shared bằng `cat` / `grep` / `awk`** — `sed` bị luật chặn ghi `shared/**` chặn luôn.
@@ -91,7 +93,7 @@ tay che mặt, khoá chủ thể nhiều người, trạng thái `ACQUIRING`.
 | `x.coerceIn(lo, hi)` | `min(max(x, lo), hi)` | |
 | `minWith(compareByDescending…)` / `maxWith` | Đọc kỹ comparator rồi viết lại bằng `min(by:)` / `max(by:)` **đúng chiều** | FG 21: Android từng lấy nhầm phần tử tốt nhất thay vì kém nhất |
 | `listOfNotNull(...)` cho danh sách góc | Giữ đủ phần tử, dùng `Double.nan` | FG 50: danh sách góc phải ổn định vị trí; bỏ phần tử làm lệch cặp so sánh |
-| `Math.toDegrees` / `toRadians` | `* 180 / .pi` | Giữ đúng thứ tự nhân chia để khớp tới chữ số cuối |
+| `Math.toDegrees` / `toRadians` | `toDegrees(x)` trong `PD/Pose/PoseGeometry.swift` = `x * (180.0 / .pi)` | Java nhân với hằng số tính sẵn `180/π`. **Không** viết `x * 180 / .pi` — thứ tự khác, lệch chữ số cuối. `toRadians` thêm khi cần: `x * (.pi / 180.0)` |
 | `String.format("%.2f", x)`, `"%.1fx"` | `String(format:, locale: Locale(identifier: "en_US_POSIX"), …)` | Máy tiếng Việt in dấu phẩy → hỏng CSV (`LocaleCsvTest`) và nhãn zoom "1,5x" (FG 51, 106) |
 | `plurals` | Variations của String Catalog | FG 106: số ít/nhiều phải đủ cả en và vi |
 | `data class` | `struct …: Equatable` | So `Double.nan == .nan` luôn `false` ở cả hai — test có NaN phải đọc kỹ |
@@ -143,9 +145,10 @@ Phát hiện bẫy mới → thêm dòng.
 | `template/KieuChupTren.kt` | 33 | `PD/Template/KieuChupTren.swift` | |
 | `template/DoanKieuTren.kt` | 61 | `PD/Template/DoanKieuTren.swift` | `VFOV_RONG = 75`, `TAI_CHAN_GAN = 0.45`, `TAI_CHAN_XA = 0.35` |
 
-Test: `AspectCropTest` (6) · `TiLeKhungTest` (4) · `DoanKieuTrenTest` (5) + `KTT/TestStrings.kt` → `PDT/Support/TestStrings.swift`.
+Test: `AspectCropTest` (6) · `TiLeKhungTest` (4) · `DoanKieuTrenTest` (5) · `FramingClassTest` (3, **riêng iOS**: điểm ngoại suy
+ngoài khung, người ngồi FG 42, nửa người đáy 0,90 FG 14). `TestStrings` dời sang 2a — Phase 1 không test nào dùng.
 
-- [ ] Xanh · `grep` import (AGENTS.md) rỗng
+- [x] Xanh (18 test) · `grep` import (AGENTS.md) rỗng — 12/11/2026
 
 ⏸ **Điểm dừng 1a**
 
@@ -201,6 +204,11 @@ Test: `ShotScorerTest` (24) · `GocMayTest` (18).
 
 Test: `CriterionGateTest` (12) · `CuePresenterTest` (17) · `DatMayTest` (6) · `PerspectiveTest` (9) ·
 `LimbTowardLensTest` (13) · `RollCriterionTest` (11) · `DuoiSanDatTest` (4) · `VideoTest1909Test` (3).
+
+**Port trước tiên ở bước này:** `KTT/TestStrings.kt` → `PDT/Support/TestStrings.swift` (dời từ 1a — đây là bước đầu có
+test dùng `.vi()`). Đọc `App/Resources/Localizable.xcstrings` (chuỗi app thật dùng), không đọc `strings.xml`. Cách ghép
+tham số (`%@` / `%lld` của iOS) phải **cùng quy tắc** với bộ đổi chữ của app ở 4a — chốt luôn lúc này: tham số
+`UiTextArg.int` → `%lld`, `.string` / `.text` → `%@`; Android truyền số vào `%s` thì iOS đổi số ra chữ trước.
 
 Thời gian truyền vào bằng tham số (`nowMs`) như test Kotlin — không dùng `Date()` thật.
 

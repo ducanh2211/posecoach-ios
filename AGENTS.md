@@ -161,6 +161,10 @@ PoseCoach/
    test dùng `@testable import PoseDomain` nên vẫn thấy `internal`.
 3. **Tên type và tên file giữ đúng như Kotlin** (kể cả tên tiếng Việt như `MocLuoi`, `DatMayGate`).
    Mỗi file một type chính. Tìm cặp tương ứng bằng tên, không cần nhớ thư mục.
+3b. **Hằng số và case enum đổi sang lowerCamel theo một quy tắc cố định:** bỏ `_`, viết thường, viết hoa chữ đầu
+   mỗi từ trừ từ đầu (`LEFT_SHOULDER` → `leftShoulder`, `BA_BON` → `baBon`, `BODY_3D` → `body3d`). Tên hàm / thuộc tính
+   Kotlin đã là camelCase → giữ nguyên. Tìm cặp: `grep -rni` tên đã bỏ `_` (vd. `grep -rni leftshoulder`).
+   Thuộc tính `…Res` của Kotlin (mã `R.string`) giữ tên nhưng là **key String Catalog** (`String`).
 4. View dùng ở **1 màn** → `Features/<Man>/`; dùng ở **≥ 2 màn** → `DesignSystem/`.
 5. Repository chỉ 1 màn dùng → `Features/<Man>/`; dùng chung → `Services/`. Chỉ tạo `Data/` khi có ≥ 2 repository dùng chung.
 6. Trong `Features/<Man>/` để phẳng; quá ~8 file mới tách thêm `Views/`.
