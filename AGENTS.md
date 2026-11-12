@@ -250,8 +250,9 @@ Nhiều cách giải → liệt kê ngắn kèm trade-off để dev quyết.
 
 ## ⏳ Việc chờ iPhone thật
 
-Checklist kiểm camera 3b chưa chạy (chưa có máy, 12/11/2026) — xem mục **"⏳ Việc chờ iPhone thật"** trong
-`docs/PLAN_PORT_IOS.md`. Nhắc người dùng ngay khi họ nói đã có iPhone / sắp test máy thật.
+Checklist kiểm trên máy thật (camera 3b + màn Ảnh mẫu 4b) chưa chạy — đã có máy nhưng người dùng chưa có thời gian
+(12/11/2026). Toàn bộ các bước nằm ở **`docs/CHECKLIST_KIEM_IPHONE.md`**. Nhắc người dùng khi họ nói sắp test máy thật;
+bước nào thêm việc cần kiểm trên máy thì ghi tiếp vào file đó.
 
 ## ⏰ Việc treo — nhắc lại khi nói tới phát hành / TestFlight / App Store
 

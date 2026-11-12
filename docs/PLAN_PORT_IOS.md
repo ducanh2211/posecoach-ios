@@ -32,9 +32,10 @@ Ký hiệu: ⬜ chưa làm · 🔶 đang làm · ✅ xong · ⛔ bị chặn (gh
 
 ### ⏳ Việc chờ iPhone thật — nhắc ngay khi có máy
 
-**3b (camera + cảm biến) chưa kiểm trên iPhone** — 12/11/2026 chưa có máy, người dùng cho làm tiếp 3c. Code ở commit
-`b7df6d3` + `f662454`. Mac (Designed for iPad) không thử được camera sau, xoay máy, cảm biến. Mở app → tab Ảnh mẫu →
-nút **Start shooting**:
+**3b (camera + cảm biến) chưa kiểm trên iPhone** — 12/11/2026 đã có máy nhưng chưa chạy. Code ở commit
+`b7df6d3` + `f662454`. Mac (Designed for iPad) không thử được camera sau, xoay máy, cảm biến.
+**Hướng dẫn từng bước (cài app, vào màn chụp, tải container) + checklist 4b: `docs/CHECKLIST_KIEM_IPHONE.md`** — đánh
+dấu ở đó. Tóm tắt:
 
 - [ ] Khung xương chồng khít khi cầm dọc + ngang, camera sau + trước. **Camera trước cầm ngang** lộn 180° = bảng
   `CaptureController.orientationForAnalysis` sai cho camera trước (đang giả định `videoRotationAngle` cùng nghĩa hai camera)
