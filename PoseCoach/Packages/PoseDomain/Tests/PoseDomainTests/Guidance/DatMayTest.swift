@@ -8,10 +8,10 @@ struct DatMayTest {
     private let veo = Band(accept: 6.0, enter: 9.0, unlock: 18.0, actionFloor: 2.0)
     private let ngua = Band(accept: 6.0, enter: 9.0, unlock: 18.0, actionFloor: 2.0)
 
-    /// ⚠️ Hai dòng đầu của bản Kotlin kiểm `MediaLibrary.TemplateKind` / `gocMayTheoNhan` — port ở bước 2b
-    /// (`PD/Template/TemplateKind.swift`) và thêm lại vào đây khi đó.
     @Test("ảnh mẫu tripod bật chế độ đặt máy bằng camera trước")
-    func anhMauTripod() {
+    func anhMauTripod() throws {
+        #expect(MediaLibrary.TemplateKind.of("tripod-ngang-ao-trang.jpg") == .tripod)
+        #expect(isClose(try #require(MediaLibrary.gocMayTheoNhan("tripod-ngang-ao-trang")), 0.0, 1e-9))
         #expect(ShootMode.datMay.camTruoc && ShootMode.datMay.datMay && ShootMode.datMay.tuChup)
         #expect(!ShootMode.datMay.tamTay, "Đặt máy không chỉnh khoảng cách bằng tay")
     }

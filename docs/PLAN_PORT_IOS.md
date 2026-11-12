@@ -22,7 +22,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 |---|---|---|---|
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
 | 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
-| 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | 🔶 2a xong | 12/11/2026 |
+| 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | 🔶 2a, 2b xong | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
 | 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
@@ -246,6 +246,25 @@ Thời gian truyền vào bằng tham số (`nowMs`) như test Kotlin — không
 Test: `HuongDanTuanTuTest` (3) · `MatchPercentTest` (5) · `MirrorSelfieTest` (16) · `MocLuoiTest` (3) ·
 `SilentDeadlockTest` (3) · `ThoiQuenChupTest` (8) · `VideoTest1309Test` (15) · `CamMayThangTest` (4) ·
 `KieuChupTrenTest` (11) · `CongKiemVaHuongMayTest` (7) · `AnhNhapTest` (5) · `AutoCountdownTest` (4).
+
+- [x] Xanh — tổng **228 test** (144 tới 2a + 84 của 2b) — 12/11/2026 · `grep` import rỗng · không cảnh báo build.
+  Danh sách trên cộng ra 84 (không phải 83 như ghi trước đây).
+- [x] `DatMayTest`: thêm lại 2 dòng `MediaLibrary` hoãn từ 2a.
+- File `PD/Template/MediaLibrary.swift` thay cho `TemplateKind.swift`: giữ tên Kotlin 1-1 (`MediaLibrary.TemplateKind`,
+  `MediaLibrary.GocMayNhan`, `MediaLibrary.Template`…) để test gọi đúng như Kotlin. Chỉ phần thuần; phần chạm đĩa
+  (thư mục ảnh mẫu, chép ảnh cài sẵn, đổi tên file) → `extension MediaLibrary` ở `Services/Media` (Phase 3).
+- `ganNhan` của iOS nhận **tên file**, trả **tên mới**; đổi tên trên đĩa ở Phase 3. Hai ý của `AnhNhapTest` Kotlin
+  (*file mới tồn tại*, *file cũ biến mất*) kiểm ở Phase 3 cùng phần đó.
+- `readyToPose` = `cameraClean` như code Kotlin (code thắng dòng "kèm `stuckUnmeasured.isEmpty()`" ở bảng trên):
+  `cameraClean` đã đòi mọi mục về máy đạt hoặc bị bỏ qua, nên mục về máy không đo được vẫn chặn.
+- `CongKiemVaHuongMayTest`: 3 bài chống rung hướng máy kiểm **bản chép** trong test (giữ 400ms) như Kotlin — bộ thật ở
+  tầng camera (Phase 3).
+- `AutoCountdown` là `struct` có `tick(_:ready:busy:) -> .cho / .dem(n) / .chup`; test chạy code thật (Kotlin test chép lại).
+- ⚠️ **`ThoiQuenChupTest` dời đầu vào −40° → −41°** (2 bài đỏ nếu giữ −40°). Ở −40° đoạn hông→cổ chân của khung live
+  chĩa vào ống kính đúng 40,0° = mốc `maxOutOfPlaneDeg` (so `<=`): 1 ULP sin/cos là đổi kết quả. JVM ra hơi trên 40°
+  (bỏ mục chân → ngửa/chúc không đo được → xanh), libm Darwin ra đúng 40,0 (giữ mục chân → mọi mục đạt → đỏ). Không
+  sửa code/ngưỡng. Bản Android cũng mong manh như vậy — **báo người dùng**, việc sửa (nếu có) làm bên Android.
+- Hàm sắp xếp theo `ordinal` trong test → `Support/Ordinal.swift` (`ordinal(_:)` cho mọi enum `CaseIterable`).
 
 ⏸ **Điểm dừng 2b**
 
