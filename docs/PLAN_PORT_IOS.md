@@ -21,7 +21,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | Phase | Nội dung | Trạng thái | Ngày |
 |---|---|---|---|
 | 0 | Nền: tài nguyên, đa ngôn ngữ, quyền, khung app | ✅ | 11/11/2026 |
-| 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | 🔶 1a, 1b xong | 12/11/2026 |
+| 1 | PoseDomain — hình học, đo đạc, hồ sơ ảnh mẫu | ✅ | 12/11/2026 |
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ⬜ | |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ⬜ | |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ⬜ | |
@@ -177,8 +177,13 @@ Test: `PerspectiveValueTest` (5) · `HieuChinhGocAnhTest` (4).
 
 Test: `ShotScorerTest` (24) · `GocMayTest` (18).
 
-- [ ] Xanh — tổng Phase 1: **66 test**
-- [ ] Không có hàm đo thứ hai ngoài `Measurer` (grep tên hàm tính góc / tỉ lệ)
+- [x] Xanh — tổng Phase 1: **69 test** (66 port từ Kotlin + 3 `FramingClassTest` riêng iOS của 1a) — 12/11/2026.
+  `CropQuality` tách file riêng `PD/Measure/CropQuality.swift` (mỗi file một type chính).
+- [x] Không có hàm đo thứ hai ngoài `Measurer`: chỉ `Measurer` tạo `PoseMeasurement`. Hai chỗ khác đọc toạ độ khớp
+  đều có y hệt bên Kotlin và không đo 8 mục chấm: `DoanKieuTren` (đoán kiểu chụp trên cao) và `CropQuality` (hậu kỳ).
+- Thứ tự: Kotlin dựa vào `LinkedHashSet`/`linkedMapOf` → Swift ghi rõ `TemplateProfile.thuTuHoSo` cho `describe()`;
+  `poseDiff` duyệt `PoseGroup.allCases`. `ShotScore.perCriterion` là `[String: Double]` không thứ tự — Phase 2+ cần
+  thứ tự thì duyệt `Criterion.allCases`.
 
 ⏸ **Điểm dừng 1c = hết Phase 1**
 
