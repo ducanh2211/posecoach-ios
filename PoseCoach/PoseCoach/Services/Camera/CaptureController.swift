@@ -433,7 +433,7 @@ nonisolated final class CaptureController: NSObject, @unchecked Sendable {
 
     /// Camera sau: ưu tiên thiết bị NHIỀU ỐNG (có ống góc rộng 0,5x, tự chuyển sang ống tele) — tương đương camera
     /// logic mặc định của CameraX. Camera trước: ống góc rộng.
-    private static func pickDevice(front: Bool) -> AVCaptureDevice? {
+    static func pickDevice(front: Bool) -> AVCaptureDevice? {
         if front {
             return AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
         }
@@ -447,14 +447,14 @@ nonisolated final class CaptureController: NSObject, @unchecked Sendable {
     }
 
     /// `videoZoomFactor` ứng với 1x. Thiết bị có ống góc rộng (triple, dual-wide): mốc chuyển sang ống chính.
-    private static func zoomBase(_ device: AVCaptureDevice) -> CGFloat {
+    static func zoomBase(_ device: AVCaptureDevice) -> CGFloat {
         guard device.deviceType == .builtInTripleCamera || device.deviceType == .builtInDualWideCamera,
               let first = device.virtualDeviceSwitchOverVideoZoomFactors.first
         else { return 1 }
         return CGFloat(truncating: first)
     }
 
-    private static func applyZoom(_ device: AVCaptureDevice, _ factor: CGFloat) {
+    static func applyZoom(_ device: AVCaptureDevice, _ factor: CGFloat) {
         do {
             try device.lockForConfiguration()
             device.videoZoomFactor = min(max(factor, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)

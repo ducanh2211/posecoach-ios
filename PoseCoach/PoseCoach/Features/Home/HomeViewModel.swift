@@ -58,6 +58,15 @@ import SwiftUI
     /// Bước tiến độ mới nhất: từ, tới, ước bao lâu (ms), bắt đầu lúc nào. Xem `TienDo`.
     private(set) var buocTienDo: (tu: Float, den: Float, ms: Int, batDau: Date) = (0, 0, 0, .distantPast)
 
+    // --- Đề xuất ảnh mẫu theo bối cảnh ---
+    /// Bảng chọn cách bắt đầu (chụp/quay hoặc chọn ảnh/video có sẵn).
+    var showSceneStart = false
+    /// Photo Picker nhiều mục cho luồng bối cảnh.
+    var showScenePicker = false
+    var scenePickerItems: [PhotosPickerItem] = []
+    /// Luồng bối cảnh đang mở. `nil` = đóng.
+    var sceneStart: SceneStart?
+
     /// Chọn xong ảnh mẫu (đã qua cổng kiểm) → vào màn chụp. Màn gốc gán.
     @ObservationIgnored var onPickTemplate: (URL) -> Void = { _ in }
 
@@ -137,6 +146,41 @@ import SwiftUI
         let f = sauKhiDong
         sauKhiDong = nil
         f?()
+    }
+
+    // MARK: - Đề xuất theo bối cảnh (port phần `SceneStart` / `SceneStartSheet` của `KT/home/HomeScreen.kt`)
+
+    func sceneChonCamera() {
+        sauKhiDong = { [weak self] in self?.sceneStart = .camera }
+        showSceneStart = false
+    }
+
+    func sceneChonThuVien() {
+        sauKhiDong = { [weak self] in self?.showScenePicker = true }
+        showSceneStart = false
+    }
+
+    /// Chọn xong ảnh/video trong Photo Picker → mở luồng bối cảnh khi bảng chọn đã đóng hẳn.
+    func scenePicked() {
+        let items = scenePickerItems
+        if items.isEmpty { return }
+        scenePickerItems = []
+        Task {
+            await UIApplication.choChuyenCanhXong()
+            sceneStart = .media(items)
+        }
+    }
+
+    /// Chọn một ảnh mẫu đề xuất → đóng luồng rồi chạy cổng kiểm như bấm ô lưới.
+    func scenePickTemplate(_ file: URL) {
+        sauKhiDong = { [weak self] in self?.selectTemplate(file) }
+        sceneStart = nil
+    }
+
+    /// Không có ảnh mẫu hợp → đóng luồng rồi mở nhập ảnh mẫu.
+    func sceneImport() {
+        sauKhiDong = { [weak self] in self?.showPicker = true }
+        sceneStart = nil
     }
 
     // MARK: - Nhập ảnh

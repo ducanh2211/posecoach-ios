@@ -29,11 +29,11 @@ struct RootView: View {
                 .tabItem { Label(LocalizedStringKey("tab_templates"), systemImage: "photo.on.rectangle.angled") }
                 .tag(Tab.templates)
 
-            NavigationStack { placeholder("tab_library") { EmptyView() } }
+            LibraryView()
                 .tabItem { Label(LocalizedStringKey("tab_library"), systemImage: "photo.stack") }
                 .tag(Tab.library)
 
-            NavigationStack { placeholder("tab_settings") { EmptyView() } }
+            SettingsView()
                 .tabItem { Label(LocalizedStringKey("tab_settings"), systemImage: "gearshape") }
                 .tag(Tab.settings)
         }
@@ -64,18 +64,5 @@ struct RootView: View {
                 EmptyView()
             }
         }
-    }
-
-    /// Màn chưa port (Library / Settings Phase 5).
-    private func placeholder<Extra: View>(_ titleKey: String, @ViewBuilder _ extra: () -> Extra) -> some View {
-        VStack(spacing: 16) {
-            Text(LocalizedStringKey(titleKey))
-                .font(.title2)
-                .foregroundStyle(Ds.textMuted)
-            extra()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Ds.bg)
-        .navigationTitle(Text(LocalizedStringKey(titleKey)))
     }
 }

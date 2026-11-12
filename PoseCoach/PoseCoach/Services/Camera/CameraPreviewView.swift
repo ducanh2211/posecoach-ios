@@ -4,7 +4,7 @@ import UIKit
 
 /// Khung xem trước của camera — `AVCaptureVideoPreviewLayer` bọc cho SwiftUI.
 ///
-/// Nằm ở `Services/` vì đây là nơi duy nhất được import AVFoundation; View chỉ truyền `CaptureController`.
+/// Nằm ở `Services/` vì đây là nơi duy nhất được import AVFoundation; View chỉ truyền `CaptureController` / `SceneCamera`.
 ///
 /// - Lấp đầy ô (`resizeAspectFill`, như `FILL_CENTER` của Android): ô đã đúng tỉ lệ khung người dùng chọn, hình cắt phần
 ///   giữa — đúng vùng mà phép đo (`croppedToAspect`) và ảnh ra cùng cắt, nên khung xương vẽ đè trong cùng ô sẽ khớp.
@@ -12,11 +12,15 @@ import UIKit
 /// - Xoay theo HƯỚNG GIAO DIỆN (không phải hướng máy): giao diện xoay tới đâu thì hình xem trước phải dựng đứng theo đó.
 struct CameraPreviewView: UIViewRepresentable {
 
-    let controller: CaptureController
+    private let session: AVCaptureSession
+
+    init(controller: CaptureController) { session = controller.session }
+
+    init(camera: SceneCamera) { session = camera.session }
 
     func makeUIView(context: Context) -> PreviewUIView {
         let view = PreviewUIView()
-        view.previewLayer.session = controller.session
+        view.previewLayer.session = session
         view.previewLayer.videoGravity = .resizeAspectFill
         view.backgroundColor = .black
         return view

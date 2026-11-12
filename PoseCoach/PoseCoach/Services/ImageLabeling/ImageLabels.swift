@@ -15,20 +15,28 @@ nonisolated enum ImageLabels {
 
     /// Tên nhãn tiếng Anh gốc → độ tin cậy. Rỗng khi lỗi — khi đó bên gọi coi như không chắc.
     static func of(_ image: CGImage) -> [String: Float] {
-        // Hạ ngưỡng xuống 0,2 (mặc định 0,5): cần biết cả nhãn yếu mới phân được "chắc không có" với "không chắc".
-        let options = ImageLabelerOptions()
-        options.confidenceThreshold = 0.2
-        let labeler = ImageLabeler.imageLabeler(options: options)
-        let vision = VisionImage(image: UIImage(cgImage: image))
-        vision.orientation = .up
         do {
+            // Hạ ngưỡng xuống 0,2 (mặc định 0,5): cần biết cả nhãn yếu mới phân được "chắc không có" với "không chắc".
             // Như `associate`: nhãn trùng tên thì cái sau thắng.
             var out: [String: Float] = [:]
-            for l in try MLKitLock.lock.withLock({ try labeler.results(in: vision) }) { out[l.text] = Float(l.confidence) }
+            for l in try raw(image, threshold: 0.2) { out[l.text] = l.confidence }
             return out
         } catch {
             log.warning("Không gắn nhãn được ảnh: \(error.localizedDescription, privacy: .public)")
             return [:]
         }
+    }
+
+    /// Nhãn THÔ, đúng thứ tự ML Kit trả về — cho bên cần lưu nguyên danh sách (`SceneRepository`). Lỗi thì ném ra để bên
+    /// gọi báo người dùng.
+    ///
+    /// - Parameter threshold: ngưỡng tin cậy. `0.5` = `ImageLabelerOptions.DEFAULT_OPTIONS` của Android.
+    static func raw(_ image: CGImage, threshold: Double) throws -> [(text: String, confidence: Float)] {
+        let options = ImageLabelerOptions()
+        options.confidenceThreshold = NSNumber(value: threshold)
+        let labeler = ImageLabeler.imageLabeler(options: options)
+        let vision = VisionImage(image: UIImage(cgImage: image))
+        vision.orientation = .up
+        return try MLKitLock.lock.withLock { try labeler.results(in: vision) }.map { ($0.text, Float($0.confidence)) }
     }
 }

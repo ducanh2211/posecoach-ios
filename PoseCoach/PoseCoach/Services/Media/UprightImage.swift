@@ -50,4 +50,29 @@ nonisolated enum UprightImage {
         }
         return img
     }
+
+    /// Nạp ảnh đúng chiều, thu cho cạnh DÀI ≤ `maxLongSide` (không phóng to) — như `ImageDecoder` + `setTargetSize` của
+    /// `KT/core/data/SceneRepository.kt` (ảnh đưa ML Kit gắn nhãn bối cảnh, cạnh dài 640).
+    static func decode(_ file: URL, maxLongSide: Int) -> CGImage? {
+        guard let src = CGImageSourceCreateWithURL(file as CFURL, nil),
+              let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
+              let w = props[kCGImagePropertyPixelWidth] as? Int,
+              let h = props[kCGImagePropertyPixelHeight] as? Int,
+              w > 0, h > 0
+        else {
+            log.warning("Không nạp được ảnh \(file.lastPathComponent, privacy: .public)")
+            return nil
+        }
+        let opts: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: min(maxLongSide, max(w, h)),
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        guard let img = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) else {
+            log.warning("Không giải mã được ảnh \(file.lastPathComponent, privacy: .public)")
+            return nil
+        }
+        return img
+    }
 }

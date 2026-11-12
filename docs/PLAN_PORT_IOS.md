@@ -25,7 +25,7 @@ Viết tắt: **PD/** = `PoseCoach/Packages/PoseDomain/Sources/PoseDomain/` · *
 | 2 | PoseDomain — hướng dẫn, cổng kiểm, chọn ảnh | ✅ xong (2a, 2b, 2c) | 12/11/2026 |
 | 3 | Services — MediaPipe, camera, cảm biến, ML Kit, GeoCalib, media | ✅ code xong (3a, 3b, 3c) · 3b chờ kiểm iPhone | 12/11/2026 |
 | 4 | Luồng chính — Home / nhập ảnh → cổng kiểm → Capture → Result | ✅ code xong (4a–4d) · 4b, 4c, 4d chờ kiểm iPhone | 12/11/2026 |
-| 5 | Phần phụ — Library, Scene, Settings | ⬜ | |
+| 5 | Phần phụ — Library, Scene, Settings | ✅ code xong · chờ kiểm iPhone (camera bối cảnh) | 12/11/2026 |
 | 6 | Đối chiếu với Android + đo trên máy thật | ⬜ | |
 
 Ký hiệu: ⬜ chưa làm · 🔶 đang làm · ✅ xong · ⛔ bị chặn (ghi lý do)
@@ -77,7 +77,7 @@ tay che mặt, khoá chủ thể nhiều người, trạng thái `ACQUIRING`.
 | D1 | Lấy tài nguyên thế nào? | ✅ **Chốt 11/11/2026: tham chiếu thẳng** từ `shared/…/assets/` vào Copy Bundle Resources (chỉ đọc lúc build) | — |
 | D2 | Thêm `onnxruntime-objc` **1.30.0** (CocoaPods, Microsoft) chạy GeoCalib — cùng version Android | Đồng ý. Kiểm ngay ở Phase 0: pod cài được, nạp được model int8, không xung đột với MediaPipe / ML Kit | **Phase 0** (kiểm) · 3c · 4b |
 | D3 | Máy sàn iOS + mục tiêu hiệu năng | iPhone 11 (A13, theo tài liệu gốc); ≥ 8–10 fps vòng đo, trễ cue < 350 ms | Phase 6 (chốt sớm để có máy) |
-| D4 | Chọn ngôn ngữ trong app hay dùng ngôn ngữ riêng từng app của iOS? | **Của hệ thống** — Settings chỉ có nút mở Cài đặt, bỏ `LanguageRepository` | Phase 5 |
+| D4 | Chọn ngôn ngữ trong app hay dùng ngôn ngữ riêng từng app của iOS? | ✅ **Chốt 12/11/2026: của hệ thống** — Settings chỉ có dòng mở Cài đặt, bỏ `LanguageRepository` + `AppLanguageTest` | — |
 | D5 | Thư viện tải ảnh cho lưới ảnh mẫu (Android dùng Coil) | **Không thêm** — ImageIO thumbnail + `NSCache` | Phase 4 |
 | D6 | Dữ liệu đối chiếu từ Android (JSON số đo cho cùng bộ ảnh) | Nhờ bên Android thêm lệnh xuất | Phase 6 |
 | D7 | Code đánh dấu `⚠️ TẠM` bên Android: GeoCalib chạy trên màn chụp (`CaptureScreen.kt:335`, `CaptureViewModel.kt:212`) + `debugDo` / `debugGocMay` (`CaptureViewModel.kt:388–455`) | **Không port** — tài liệu ghi phải gỡ trước khi phát hành | Phase 4 |
@@ -638,6 +638,45 @@ Test: `FailedCriteriaTest` (6) — phần thuần đặt ở `PD/` nếu không 
 | `settings/SettingsScreen.kt` + `core/data/LanguageRepository.kt` | 190 | `App/Features/Settings/` | **Chờ D4**. Thêm mục **ghi công CC BY 4.0** (GeoCalib — cvg, ECCV 2024; bộ dữ liệu Laval Indoor HDR) |
 
 Test: `AppLanguageTest` (2) — chỉ port nếu D4 giữ chọn ngôn ngữ trong app.
+
+- [x] Thư viện: lưới buổi chụp (ảnh mẫu | ảnh giống nhất), xem buổi (cặp đối chiếu + ảnh còn lại theo điểm), xem toàn
+  màn hình (vuốt trang, chụm phóng 1–5×), xoá cả buổi có hỏi lại — `LibraryFlowTests` (1)
+- [x] Bối cảnh: bảng chọn cách bắt đầu ở Home → camera bối cảnh / Photo Picker (≤ 10 ảnh+video) → đề xuất (đầu vào
+  gọn/mở, gõ chữ, yếu tố bấm bỏ, thẻ ảnh mẫu, màn xáo thẻ) → chọn mẫu = qua cổng kiểm như bấm ô lưới; không có mẫu hợp →
+  nhập ảnh. `SceneFlowTests` (5): ML Kit gắn nhãn ảnh cài sẵn, file hỏng → câu lỗi, **tệp nhãn thư viện lưu lại và
+  lần sau không gắn nhãn lại**, gõ chữ ra yếu tố + xếp hạng + từ không hiểu, rời luồng xoá file tạm
+- [x] Cài đặt theo D4. `AppLanguageTest` không port. 67/67 PoseCoachTests, 269/269 PoseDomain (12/11/2026)
+- [ ] Trên iPhone: camera bối cảnh (chụp, quay ≤ 60 s, "Chậm lại" > 35°/s, zoom, lật cam), Photo Picker có video,
+  màn xáo thẻ — `docs/CHECKLIST_KIEM_IPHONE.md` mục F
+
+**Đã làm (12/11/2026)** — khác plan / Kotlin:
+- **Không dùng lại `CaptureController`** cho camera bối cảnh: Kotlin cố ý tách `SceneCamera` khỏi bộ điều khiển màn
+  chụp ("gộp chung thì sửa camera đề xuất có thể làm hỏng màn chụp chính"), và `CaptureController` gắn chặt
+  `PoseDetector` + chụp loạt 8 tấm. Port `Services/Camera/SceneCamera.swift` riêng (`AVCapturePhotoOutput` +
+  `AVCaptureMovieFileOutput` không micro, HD); chỉ dùng chung `pickDevice` / `zoomBase` / `applyZoom` (bỏ `private`).
+  `CameraPreviewView` nhận `controller:` hoặc `camera:`.
+- File: `Features/Library/` (`LibraryView`, `LibraryViewModel`, `AlbumView`, `XemToanManView`), `Features/Scene/`
+  (`SceneView`, `SceneViewModel`, `SceneUiState`, `SceneRepository`, `SceneSuggestView`, `SceneCameraView`,
+  `SceneCameraViewModel`, `XaoTheOverlay`), `Features/Settings/SettingsView` (không có ViewModel — màn không trạng
+  thái), `Features/Home/SceneStartSheet`. Chuyển sang `DesignSystem/`: `NutTronPhu` (màn chụp + camera bối cảnh),
+  `AsyncThumb` (Thư viện + Bối cảnh, thay `AsyncImage` của Coil qua `ThumbnailCache`).
+- `SceneRepository` ở `Features/Scene` (một màn dùng), không import ML Kit: gọi `ImageLabels.raw` (mới — nhãn thô đúng
+  thứ tự, ném lỗi; ngưỡng 0,5 = `DEFAULT_OPTIONS`), `VideoFrameSource` (khung thu vào ô 640×640: mở một lần để biết cỡ),
+  `UprightImage.decode(_:maxLongSide:)` (mới — cạnh dài 640 như `ImageDecoder.setTargetSize`). Tệp nhãn
+  `Application Support/scene-tags-v1.json`, cùng định dạng JSON với Android. Hàm `@concurrent` → nhận lệnh huỷ của Task.
+- Photo Picker iOS không cho đọc thẳng như `content://` → ảnh/video chọn được **chép vào `Caches/scene-capture/`** (cùng
+  chỗ ảnh tự chụp), xoá cả thư mục khi rời luồng. Mục không chép được → "Hãy chọn ảnh hoặc video…" (`scene_err_type`).
+  Video không mở được → `scene_err_duration` (Kotlin: lỗi chung kèm thông điệp hệ thống).
+- `.photosPicker` không có `onDismiss` → mở luồng bối cảnh sau khi bảng chọn đóng hẳn bằng
+  `UIApplication.choChuyenCanhXong()` (`Extensions/`, chờ tối đa 2 s). Các hộp khác dùng `sauKhiDong` như 4b.
+- ViewModel tạo mới mỗi lần mở luồng → không cần `Clear` lúc mở; `clear()` lúc rời (`onDisappear`) xoá file tạm.
+- `XaoTheOverlay`: `Animatable` → `Tween` theo thời gian vẽ bằng `TimelineView`; `FastOutSlowInEasing` = bezier
+  (0,4; 0; 0,2; 1). Hằng số giữ tên + giá trị (`treHienMs` 300, `xaoToiThieuMs` 1500, `buocXaoMs` 110, `khoangHam` 9).
+- Camera bối cảnh: quyền đã bị từ chối thì nút "Cho phép dùng camera" mở Cài đặt (iOS không hỏi lại). Hằng số
+  `goiYSoTam` 3, `quayNhanhDegPerSec` 35 (⚠️ phỏng đoán, chưa đo — như Android), `quayToiThieuMs` 2000 ở
+  `SceneCameraViewModel` (D8).
+- Màu `colorScheme.error` / `tertiary` của Material (chữ lỗi, "khớp một phần") lấy mã M3 mặc định — Ds không có.
+- **Ghi công CC BY 4.0 chưa làm** — người dùng chốt để tới trước khi phát hành (cần thêm key chuỗi); vẫn ở mục ⏰ AGENTS.md.
 
 ⏸ **Điểm dừng 5 = hết Phase 5**
 

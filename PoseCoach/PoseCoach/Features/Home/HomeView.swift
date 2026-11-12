@@ -5,8 +5,7 @@ import SwiftUI
 /// Màn Ảnh mẫu. Port giao diện `KT/home/HomeScreen.kt`: tiêu đề, thẻ nhập ảnh, hàng lọc theo nhóm, lưới ảnh mẫu, rồi
 /// cổng kiểm ảnh trước khi vào màn chụp.
 ///
-/// Khác Android: nút tìm theo bối cảnh (`home_scene_search`) chưa có — màn Bối cảnh port ở Phase 5. Hộp thoại nhận ảnh là
-/// một bảng kéo lên (`GateSheet`) thay vì `AlertDialog` — nội dung dài, cần cuộn.
+/// Khác Android: hộp thoại nhận ảnh là một bảng kéo lên (`GateSheet`) thay vì `AlertDialog` — nội dung dài, cần cuộn.
 struct HomeView: View {
 
     @State private var vm = HomeViewModel()
@@ -25,9 +24,11 @@ struct HomeView: View {
                 .font(.system(size: 12)).foregroundStyle(Ds.textMuted)
                 .padding(.top, 3)
 
+            sceneButton.padding(.top, 14)
+
             ImportCard(busy: vm.importing) { vm.showPicker = true }
                 .disabled(vm.busy)
-                .padding(.top, 14)
+                .padding(.top, 8)
 
             // Chỉ hiện hàng lọc khi thư viện thật sự có nhiều hơn một nhóm — chip bấm cái nào cũng ra y hệt thì chỉ chiếm chỗ.
             if vm.kinds.count > 1 {
@@ -107,6 +108,38 @@ struct HomeView: View {
             }
             .scrollIndicators(.hidden)
         }
+    }
+
+    // MARK: - Đề xuất theo bối cảnh
+
+    /// Nút mở luồng đề xuất. Bảng chọn, Photo Picker và luồng bối cảnh gắn vào CHÍNH nút này (không chồng lên các hộp ở
+    /// gốc màn).
+    private var sceneButton: some View {
+        Button { vm.showSceneStart = true } label: {
+            Text(LocalizedStringKey("home_scene_search")).font(.system(size: 14, weight: .medium)).frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .disabled(vm.busy)
+        .sheet(isPresented: $vm.showSceneStart, onDismiss: vm.modalDaDong) {
+            SceneStartSheet(onCamera: vm.sceneChonCamera, onGallery: vm.sceneChonThuVien)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
+        .photosPicker(isPresented: $vm.showScenePicker, selection: $vm.scenePickerItems,
+                      maxSelectionCount: SceneView.chonToiDa, matching: .any(of: [.images, .videos]),
+                      preferredItemEncoding: .compatible)
+        .onChange(of: vm.scenePickerItems) { vm.scenePicked() }
+        .fullScreenCover(isPresented: sceneShown, onDismiss: vm.modalDaDong) {
+            if let start = vm.sceneStart {
+                SceneView(start: start, onClose: { vm.sceneStart = nil },
+                          onPickTemplate: vm.scenePickTemplate, onImport: vm.sceneImport)
+            }
+        }
+    }
+
+    private var sceneShown: Binding<Bool> {
+        Binding(get: { vm.sceneStart != nil }, set: { if !$0 { vm.sceneStart = nil } })
     }
 
     // MARK: - Binding cho các hộp

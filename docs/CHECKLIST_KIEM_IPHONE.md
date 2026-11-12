@@ -100,6 +100,23 @@ Chụp liên tục hoặc quay video như mục D → tự sang màn "Kết qu�
   màn hình phải đóng dù hộp thoại vừa đóng); Huỷ → ở lại
 - [ ] Vào chụp lại lần nữa sau khi thoát → **không** tự nhảy về màn kết quả cũ (FOOTGUNS 114)
 
+## F. Phase 5 — Thư viện, Bối cảnh, Cài đặt
+
+- [ ] Tab Thư viện: sau khi "Lưu tất cả" ở mục E có ô mới (ảnh mẫu | ảnh giống nhất, giờ, số ảnh); mở → cặp "Mẫu | Ảnh
+  của bạn · giống N%" + "Các ảnh khác"; bấm ảnh → toàn màn hình, vuốt chuyển ảnh, chụm phóng to (đang phóng thì không
+  chuyển trang); "Xoá buổi này" → hỏi → xoá, ô biến mất
+- [ ] Home → "Đề xuất ảnh mẫu theo bối cảnh" → bảng 2 lựa chọn
+- [ ] **Chụp / quay bối cảnh**: hỏi quyền camera nếu chưa có; dòng nhắc đổi theo số tấm (3 tấm gợi ý); "Xong (n)" → màn
+  đề xuất. Chế độ Video: quay < 2 s bấm dừng không ăn; di máy nhanh → "Chậm lại" vàng; tự dừng ~59,5 s; zoom 0.5/1/2x;
+  lật camera
+- [ ] **Chọn ảnh/video có sẵn** (thử cả video): chọn xong luồng bối cảnh **phải mở ra** (không đứng ở Home) → màn xáo thẻ
+  (nếu phân tích > 0,3 s) → dừng ở hạng 1–3 có % → danh sách; chạm khi đang dừng thẻ thì bỏ qua
+- [ ] Màn đề xuất: bỏ chọn yếu tố → danh sách đổi ngay; gõ "bãi biển" → Đề xuất lại; từ lạ → "Chưa hiểu từ: …"; ✕ trên
+  ảnh đầu vào → đề xuất lại; chọn một mẫu → đóng luồng, hiện hộp cổng kiểm của mẫu đó
+- [ ] Không có mẫu hợp → nút "Import ảnh mẫu của bạn" → đóng luồng, mở Photo Picker nhập ảnh
+- [ ] Rời luồng → container `Library/Caches/scene-capture/` **không còn** (đã xoá)
+- [ ] Tab Cài đặt: "Theo ngôn ngữ của máy" mở trang Cài đặt iOS của app; đổi ngôn ngữ ở đó → app ra đúng tiếng
+
 ## Còn treo bên Android (đã báo người dùng, chưa kiểm)
 
 Ô xem trước DỌC khi giao diện ngang, trong khi khung đo cắt NGANG.
