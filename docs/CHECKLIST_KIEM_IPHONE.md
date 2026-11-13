@@ -139,14 +139,91 @@ Làm SAU khi các mục A–F đạt. Máy sàn chưa chốt (D3 — đề xuấ
 - [ ] Trễ câu hướng dẫn: quay màn hình 120 fps, di máy đột ngột → đếm khung tới lúc câu đổi. Đạt: **< 350 ms**
 - [ ] Chấm điểm sau quay: video 15 s → thời gian từ lúc dừng tới màn xem lại (Spike Q2: ≤ 5 s); burst 8 tấm
 - [ ] Ghi `thermalState` nếu thấy máy nóng (Implementation_Guide §6 — iOS có, Android không; **chỉ báo, không port**)
-- [ ] Sau bản giảm nóng 13/11/2026 (chờ kết quả rồi mới gửi khung · luồng camera YUV · tách `CaptureLiveState`), chạy
-  bản **Release**:
-  - Màn chụp 5 phút, cả chụp liên tục lẫn video: máy ấm ít hơn bản trước. Khung xương vẫn bám người, **không đứng hình**
-    (nếu đứng: chốt `choKetQuaToiDaMs` 1 s ở `PoseDetector` đang cứu — tức MediaPipe có bỏ callback, báo lại)
-  - "Per frame … ms" giờ là thời gian thật của một lần nhận diện (trước đó báo thấp vì mốc gửi bị khung sau ghi đè) —
-    đừng so trực tiếp với số cũ / số Android
-  - Quay video 15 s → màn xem lại có ảnh, màu ảnh cắt từ video bình thường (luồng camera đổi sang YUV `420f`)
-  - Danh sách tiêu chí, % giống, mốc lưới, câu nhắc, đếm ngược tự động vẫn cập nhật như trước
+- [ ] Bản giảm nóng 13/11/2026 — làm theo mục **6c+** ngay dưới
+
+### 6c+ — bản giảm nóng màn chụp (13/11/2026)
+
+Ba commit cần kiểm, so với **bản gốc `9a0716b`** (trước khi sửa):
+
+| Commit | Đổi gì | Rủi ro cần soi |
+|---|---|---|
+| `06b0bd8` | ① Chờ có kết quả nhận diện mới gửi khung tiếp (`PoseDetector`) · ② Luồng camera YUV `420f` thay BGRA · ③ Tách `CaptureLiveState` (SwiftUI chỉ vẽ lại phần đổi theo khung) | ① khung xương đứng hình · ② màu video / ảnh cắt từ video lạ · ③ chữ / dấu tích trên màn không cập nhật |
+| bước 3 (commit kế tiếp) | Chụp liên tục: đổi định dạng camera sang khung video ≤ 1920 px, giữ nguyên góc mở + cỡ ảnh (`thuNhoKhungVideoKhiChup`) | Không đổi được (máy không có định dạng hợp) · ảnh burst kém hơn · vFOV lệch · màn xem trước nháy khi đổi chế độ |
+
+**Chuẩn bị (làm một lần)**
+1. Cài app theo mục A. Cắm cáp suốt buổi (cần cho Xcode / Console) — sạc cũng làm ấm máy, nên **hai bản phải đo cùng
+   điều kiện**: cùng cắm cáp, pin > 50 %, bỏ ốp, độ sáng màn cố định, phòng cùng nhiệt độ, máy nguội ít nhất 10 phút
+   trước mỗi lần đo.
+2. Một cảnh cố định: một người đứng cách máy ~2 m (hoặc ảnh người in to dán tường), máy đặt chân máy / tựa chắc, cùng
+   một ảnh mẫu cho mọi lần. Đủ sáng.
+3. Ảnh mẫu dùng xuyên suốt: chọn một ảnh ở tab Ảnh mẫu, ghi lại tên.
+4. Tỉ lệ khung để **3:4** (mặc định) — khung khác thì ảnh ra bị cắt, so cỡ ảnh sai.
+
+**Cách đổi bản để so trước / sau**
+- Bản gốc: `git switch --detach 9a0716b` → Xcode ⌘R. Xong quay lại: `git switch main` → ⌘R.
+- Build **Release** (đo nóng, CPU): Xcode → Product → Scheme → Edit Scheme… → Run → Build Configuration = **Release**.
+  ⚠️ Bản Release **không có** dòng số debug (m3, vFOV, `in …×…`) — mục nào cần dòng debug thì dùng **Debug**.
+- Xem log: mở **Console.app** trên Mac → chọn iPhone ở cột trái → **Start** → menu Action → bật **Include Info
+  Messages** → ô tìm kiếm gõ chữ cần lọc.
+
+**1. Nóng / CPU — Release, mỗi bản đo một lượt (bản gốc trước, bản mới sau)**
+- [ ] Mở màn chụp, chế độ **Chụp liên tục** (chip "Chụp"), hướng máy vào người, để yên **10 phút**. Ghi lại:
+  - Xcode → Debug Navigator (⌘7) → **CPU** (% trung bình) và **Energy Impact** (mức) ở phút 2 và phút 10
+  - Phút 10: sờ mặt lưng quanh cụm camera — mát / ấm / nóng; máy có tự giảm độ sáng hoặc báo nóng không
+- [ ] Lặp lại với chế độ **Video** (không cần bấm quay — chỉ để màn xem trước chạy)
+- [ ] Đạt: bản mới CPU thấp hơn rõ, mức nóng ở phút 10 thấp hơn hoặc bằng. Ghi số vào bảng dưới cùng mục này.
+
+**2. Nhận diện không đứng hình — Release hoặc Debug** (rủi ro ①)
+- [ ] Để màn chụp chạy 5 phút, người trong khung cử động liên tục: khung xương bám theo **suốt**, không đứng im giây nào
+- [ ] Lấy tay che kín ống kính 5 giây rồi bỏ ra; quay máy ra chỗ không có người 10 giây rồi quay lại: khung xương hiện
+  lại ngay (≤ 1 giây)
+- [ ] Đổi Chụp liên tục ↔ Video 3 lần, xoay camera trước ↔ sau 3 lần: sau mỗi lần khung xương vẫn chạy
+- [ ] Nếu có lúc đứng hình ~1 giây rồi chạy tiếp: chốt an toàn `choKetQuaToiDaMs` trong `PoseDetector` đang cứu, tức
+  MediaPipe có bỏ khung mà không trả kết quả → ghi lại lúc nào xảy ra, báo lại để xử lý
+- [ ] Ghi số "Per frame … ms" (bấm dòng trạng thái "● Thấy mẫu" ở góc trên trái để mở bảng). ⚠️ Số này giờ là thời gian **thật** của
+  một lần nhận diện — bản gốc báo thấp hơn thực tế (mốc gửi bị khung sau ghi đè, Android cũng vậy). Không so trực
+  tiếp với số bản gốc / Android; chỉ cần ghi lại làm mốc
+
+**3. Giao diện vẫn cập nhật — Debug** (rủi ro ③)
+- [ ] Người bước ra khỏi khung rồi vào lại: dòng "● Thấy mẫu / ○ Chưa thấy mẫu" đổi đúng, viên câu nhắc đổi theo
+- [ ] Danh sách tiêu chí: dấu tích đổi khi chỉnh máy (nâng / hạ máy → mục cao/thấp đổi); % giống chạy
+- [ ] Bật lưới: khi xong các bước góc máy, mốc đặt người hiện ra và **di chuyển theo người**
+- [ ] Bật Tự động: đủ điều kiện → đếm ngược 3-2-1 hiện trên viên câu nhắc → tự chụp
+- [ ] Ba dòng số debug trên cụm nút dưới chạy theo từng khung; bảng số liệu (bấm dòng trạng thái) chạy
+- [ ] Đang quay video: đồng hồ quay chạy, nút dừng bấm được sau 3 giây
+
+**4. Video vẫn ghi đúng — Debug, so với bản gốc cùng cảnh** (rủi ro ②)
+- [ ] Chế độ Video, quay 15 giây → màn xem lại có đủ ảnh, **màu da / màu áo giống bản gốc** (không ngả xanh / hồng,
+  không nhợt, không quá đậm). Camera sau và camera trước mỗi bên một lượt
+- [ ] Quay xong, ảnh và video ra đúng chiều, camera trước lật gương giống khung xem trước (như mục B.3)
+
+**5. Chụp liên tục — khung video nhỏ — Debug** (bước 3)
+- [ ] Console.app lọc `Chụp liên tục`, mở màn chụp ở chế độ Chụp liên tục **camera sau**. Chép nguyên dòng log:
+  - `khung video 4032×3024 → 1920×1440, vFOV …, ảnh 4032×3024` (số tuỳ máy) = **đã đổi** → làm tiếp các ô dưới
+  - `không có định dạng nhỏ hơn tương đương … — giữ preset .photo` = máy này **không đổi được** → gửi lại dòng log
+    (có kích thước, vFOV, cỡ ảnh) để xem điều kiện nào trượt; các ô dưới bỏ qua
+  - Không thấy dòng nào: khung video của preset vốn ≤ 1920 px, không cần đổi — ghi lại đời máy
+- [ ] Xoay sang **camera trước** (ảnh mẫu selfie hoặc nút xoay camera) → chép dòng log của camera trước
+- [ ] **vFOV không đổi**: cùng cảnh, cùng zoom 1x, cầm dọc — số `vFOV` cuối dòng debug `m3 … vFOV NN` ở bản mới phải
+  **bằng** bản gốc `9a0716b` (cả camera sau và trước). Lệch → báo ngay, phép đo mục 3 bị ảnh hưởng
+- [ ] **Cỡ ảnh không đổi**: chụp một loạt ở mỗi bản → màn xem lại → **Lưu tất cả** → tải container (cách ở mục B.3) →
+  `AppData/Library/Application Support/thu-vien/buoi-…/` → mở ảnh trong Preview → ⌘I xem kích thước. Hai bản phải
+  **bằng nhau**
+- [ ] **Chất lượng ảnh không kém**: cùng cảnh, đặt ảnh hai bản cạnh nhau, phóng 100 %: độ nét tóc / mắt / chữ trên áo,
+  nhiễu vùng tối, màu — không kém hơn bản gốc. Thử thêm một lượt trong phòng **thiếu sáng**
+- [ ] **Khung xem trước**: không mờ / vỡ hạt hơn bản gốc (khung xem trước giờ lấy từ khung ≤ 1920 px)
+- [ ] Đổi Chụp liên tục ↔ Video lúc camera đang chạy: màn xem trước có thể **nháy nhẹ một lần** (cấu hình lại phiên
+  camera thêm một lượt) — chấp nhận được; nếu đen hình > 1 giây hoặc khung xương lệch khỏi người → báo lại
+- [ ] Sau khi đổi chế độ / xoay camera: zoom về **1x**, các chip zoom (0.5x / 1x / 2x…) vẫn đúng mức
+
+**Bảng ghi kết quả** (điền khi đo)
+
+| Đời máy / iOS | Bản | Chế độ | CPU phút 2 / 10 | Energy Impact | Mức nóng phút 10 | Per frame ms | Log định dạng |
+|---|---|---|---|---|---|---|---|
+| | `9a0716b` | Chụp liên tục | | | | | — |
+| | mới | Chụp liên tục | | | | | |
+| | `9a0716b` | Video | | | | | — |
+| | mới | Video | | | | | — |
 
 ### 6d — rủi ro #1: mẫu xoay đủ vòng
 - [ ] Mẫu xoay chậm 360° trước camera (hoặc phát video người xoay trên màn hình khác, KHÔNG tua): khung xương có bám

@@ -265,7 +265,10 @@ nonisolated final class CaptureController: NSObject, @unchecked Sendable {
         let cfg = currentConfig()
         sessionQueue.async { [self] in
             let ok = configure(cfg)
-            if ok { session.startRunning() }
+            if ok {
+                if cfg.mode == .burst { thuNhoKhungVideoKhiChup() }
+                session.startRunning()
+            }
             let live = liveDetectionActive
             DispatchQueue.main.async { [self] in
                 if ok { onReady(live) }
@@ -313,7 +316,9 @@ nonisolated final class CaptureController: NSObject, @unchecked Sendable {
         guard locked({ _started }) else { return }
         let cfg = currentConfig()
         sessionQueue.async { [self] in
-            if configure(cfg), !session.isRunning { session.startRunning() }
+            guard configure(cfg) else { return }
+            if cfg.mode == .burst { thuNhoKhungVideoKhiChup() }
+            if !session.isRunning { session.startRunning() }
         }
     }
 
@@ -467,6 +472,66 @@ nonisolated final class CaptureController: NSObject, @unchecked Sendable {
         } catch {
             log.warning("Không đặt được zoom: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Cạnh dài tối đa của khung VIDEO khi chụp liên tục — đủ nét cho khung xem trước, nhỏ hơn nhiều khung ảnh 12 MP.
+    private static let burstVideoLongSideMax: Int32 = 1920
+
+    /// CHỤP LIÊN TỤC: preset `.photo` chọn định dạng mà khung VIDEO cũng to như ảnh (máy đời mới 4032×3024) — luồng khung
+    /// hình chuyển 30 khung cỡ đó mỗi giây chỉ để thu về 640 px cho nhận diện, máy nóng nhanh (Android nhận sẵn 640×480).
+    /// Đổi sang định dạng khung video nhỏ hơn nhưng GIỐNG HỆT định dạng của preset ở mọi thứ ảnh hưởng tới kết quả:
+    /// - cùng góc mở (`videoFieldOfView`) — mục 3 đọc thẳng số này (`verticalFovDeg`)
+    /// - cùng tỉ lệ khung — phép cắt theo tỉ lệ khung và khung đưa vào nhận diện không đổi
+    /// - chụp được đúng cỡ ảnh đang chụp, cùng mức chất lượng, cùng định dạng điểm ảnh, cùng không gian màu
+    ///
+    /// Không có định dạng nào thoả HẾT thì giữ nguyên preset `.photo`. Chạy trên `sessionQueue`, SAU khi `configure` đã
+    /// áp preset (định dạng của preset là mốc so).
+    private func thuNhoKhungVideoKhiChup() {
+        guard let device = locked({ _device }), locked({ _photoActive }) else { return }
+        let goc = device.activeFormat
+        let dimsGoc = CMVideoFormatDescriptionGetDimensions(goc.formatDescription)
+        guard max(dimsGoc.width, dimsGoc.height) > Self.burstVideoLongSideMax,
+              let anh = goc.supportedMaxPhotoDimensions.max(by: { $0.width * $0.height < $1.width * $1.height })
+        else { return }
+        let tiLeGoc = Double(dimsGoc.width) / Double(dimsGoc.height)
+        let loaiDiemAnh = CMFormatDescriptionGetMediaSubType(goc.formatDescription)
+        let fps30 = CMTime(value: 1, timescale: 30)
+
+        let hop = device.formats.filter { f in
+            let d = CMVideoFormatDescriptionGetDimensions(f.formatDescription)
+            return max(d.width, d.height) <= Self.burstVideoLongSideMax
+                && abs(Double(d.width) / Double(d.height) - tiLeGoc) < 0.01
+                && abs(f.videoFieldOfView - goc.videoFieldOfView) < 0.01
+                && CMFormatDescriptionGetMediaSubType(f.formatDescription) == loaiDiemAnh
+                && f.supportedMaxPhotoDimensions.contains { $0.width == anh.width && $0.height == anh.height }
+                && (!goc.isHighPhotoQualitySupported || f.isHighPhotoQualitySupported)
+                && f.supportedColorSpaces.contains(device.activeColorSpace)
+                && f.videoSupportedFrameRateRanges.contains { $0.minFrameDuration <= fps30 && fps30 <= $0.maxFrameDuration }
+        }
+        // Khung lớn nhất trong số hợp lệ — khung xem trước nét nhất.
+        guard let chon = hop.max(by: {
+            CMVideoFormatDescriptionGetDimensions($0.formatDescription).width
+                < CMVideoFormatDescriptionGetDimensions($1.formatDescription).width
+        }) else {
+            Self.log.info("Chụp liên tục: không có định dạng nhỏ hơn tương đương \(dimsGoc.width)×\(dimsGoc.height) (vFOV \(goc.videoFieldOfView), ảnh \(anh.width)×\(anh.height)) — giữ preset .photo")
+            return
+        }
+
+        session.beginConfiguration()
+        defer { session.commitConfiguration() }
+        do {
+            try device.lockForConfiguration()
+            device.activeFormat = chon
+            device.unlockForConfiguration()
+        } catch {
+            Self.log.warning("Chụp liên tục: không đổi được định dạng, giữ preset .photo: \(error.localizedDescription, privacy: .public)")
+            return
+        }
+        photoOutput.maxPhotoDimensions = anh
+        // Đổi định dạng có thể đặt lại zoom — đưa về đúng 1x như `configure`.
+        Self.applyZoom(device, locked { _zoomBase })
+        let d = CMVideoFormatDescriptionGetDimensions(chon.formatDescription)
+        Self.log.info("Chụp liên tục: khung video \(dimsGoc.width)×\(dimsGoc.height) → \(d.width)×\(d.height), vFOV \(chon.videoFieldOfView), ảnh \(anh.width)×\(anh.height)")
     }
 
     /// Chọn khung quay: ưu tiên Full HD, không có thì tụt xuống HD chứ không bỏ cuộc — quay được ở chất lượng thấp vẫn hơn
