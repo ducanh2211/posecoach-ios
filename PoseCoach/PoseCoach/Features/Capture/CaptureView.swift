@@ -88,15 +88,18 @@ struct CaptureView: View {
                 if hienLuoi {
                     LuoiBaPhan()
                     // Mốc đặt người chỉ hiện khi đã xong các bước góc máy.
-                    MocLuoiOverlay(mau: vm.state.mocMau, live: vm.state.mocLive, hien: vm.state.denBoCuc)
+                    let mau = vm.state.mocMau, hien = vm.state.denBoCuc
+                    TheoKhung(vm) { l in MocLuoiOverlay(mau: mau, live: l.mocLive, hien: hien) }
                 }
                 if vm.state.liveDetectionActive && showSkeleton {
-                    SkeletonOverlay(
-                        frame: vm.state.pose,
-                        frameWidth: vm.state.frameWidth,
-                        frameHeight: vm.state.frameHeight,
-                        minVisibility: CaptureViewModel.minVis
-                    )
+                    TheoKhung(vm) { l in
+                        SkeletonOverlay(
+                            frame: l.pose,
+                            frameWidth: l.frameWidth,
+                            frameHeight: l.frameHeight,
+                            minVisibility: CaptureViewModel.minVis
+                        )
+                    }
                 }
             }
             .aspectRatio(landscape ? 1 / tiLeDoc : tiLeDoc, contentMode: .fit)
@@ -130,15 +133,18 @@ struct CaptureView: View {
                         .background(Ds.overlayScrim, in: Capsule())
                 }
                 .buttonStyle(.plain)
-                CriteriaProgress(criteria: vm.state.criteria, matchPercent: vm.state.matchPercent)
-                    .frame(width: 150)
-                    .padding(.top, 8)
-                CriteriaChecklist(criteria: vm.state.criteria)
-                    .padding(.top, 6)
+                TheoKhung(vm) { l in
+                    CriteriaProgress(criteria: l.criteria, matchPercent: l.matchPercent)
+                        .frame(width: 150)
+                        .padding(.top, 8)
+                    CriteriaChecklist(criteria: l.criteria)
+                        .padding(.top, 6)
+                }
                 NutNho(uiText(showSkeleton ? "capture_hide_skeleton" : "capture_show_skeleton")) { showSkeleton.toggle() }
                     .padding(.top, 6)
                 if showDebug {
-                    DebugPanel(state: vm.state).padding(.top, 8)
+                    let framing = vm.state.templateFraming
+                    TheoKhung(vm) { l in DebugPanel(templateFraming: framing, live: l).padding(.top, 8) }
                 }
             }
             Spacer()
@@ -166,7 +172,7 @@ struct CaptureView: View {
                     .padding(.bottom, 12)
             }
             #if DEBUG
-            debugSoDo(s)
+            TheoKhung(vm) { l in debugSoDo(l) }
             #endif
             if let e = s.templateError { loi(e) }
             if let e = s.cameraError { loi(e) }
@@ -174,18 +180,20 @@ struct CaptureView: View {
             if vm.permission != .granted {
                 permissionNotice
             } else {
-                CuePill(
-                    prepWarning: s.prepWarning,
-                    personDetected: s.personDetected,
-                    cue: s.cue,
-                    readyToCapture: s.readyToCapture,
-                    hasCriteria: !s.criteria.isEmpty,
-                    cueForModel: s.cueForModel,
-                    readyToPose: s.readyToPose,
-                    almost: s.almost,
-                    countdown: s.countdown,
-                    onClickWarning: { vm.resetZoom() }
-                )
+                TheoKhung(vm) { l in
+                    CuePill(
+                        prepWarning: s.prepWarning,
+                        personDetected: s.personDetected,
+                        cue: s.cue,
+                        readyToCapture: s.readyToCapture,
+                        hasCriteria: !l.criteria.isEmpty,
+                        cueForModel: s.cueForModel,
+                        readyToPose: s.readyToPose,
+                        almost: s.almost,
+                        countdown: s.countdown,
+                        onClickWarning: { vm.resetZoom() }
+                    )
+                }
                 Text(LocalizedStringKey(s.autoMode ? "capture_auto_skip_note" : "capture_manual_note"))
                     .font(.system(size: 11))
                     .foregroundStyle(Color(argb: 0xCCFFFFFF))
@@ -222,7 +230,7 @@ struct CaptureView: View {
     #if DEBUG
     /// Số đo thô để đối chiếu với Android — chỉ bản Debug. Hai dòng đầu y như `CaptureScreen.kt:719–741`.
     @ViewBuilder
-    private func debugSoDo(_ s: CaptureUiState) -> some View {
+    private func debugSoDo(_ s: CaptureLiveState) -> some View {
         if let g = s.debugGocMay {
             Text(verbatim: g)
                 .font(.system(size: 13, weight: .bold).monospaced())
@@ -266,6 +274,21 @@ struct CaptureView: View {
         }
         .padding(24)
     }
+}
+
+/// Đọc `vm.live` trong một body RIÊNG. SwiftUI theo dõi `@Observable` theo từng body, nên mỗi khung nhận diện chỉ phần
+/// bọc trong đây vẽ lại, không kéo theo cả màn chụp (xem `CaptureLiveState`).
+private struct TheoKhung<Content: View>: View {
+
+    let vm: CaptureViewModel
+    @ViewBuilder let content: (CaptureLiveState) -> Content
+
+    init(_ vm: CaptureViewModel, @ViewBuilder content: @escaping (CaptureLiveState) -> Content) {
+        self.vm = vm
+        self.content = content
+    }
+
+    var body: some View { content(vm.live) }
 }
 
 /// Nút viên nhỏ trên nền mờ (kiểu nút "Đổi mẫu").

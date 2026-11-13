@@ -7,14 +7,15 @@ import SwiftUI
 /// Nhãn cho người phát triển viết thẳng tiếng Anh, không đưa vào String Catalog — như Kotlin.
 struct DebugPanel: View {
 
-    let state: CaptureUiState
+    let templateFraming: FramingClass?
+    let live: CaptureLiveState
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            dong("Template", state.templateFraming.map { UiText.res($0.labelRes).resolved() } ?? "?")
-            dong("Landmarks", "\(state.visiblePoints) / 33")
-            dong("Body yaw", state.bodyYawDeg.map { String(format: "%.1f°", locale: .current, $0) } ?? "—")
-            dong("Per frame", "\(state.inferenceMs) ms")
+            dong("Template", templateFraming.map { UiText.res($0.labelRes).resolved() } ?? "?")
+            dong("Landmarks", "\(live.visiblePoints) / 33")
+            dong("Body yaw", live.bodyYawDeg.map { String(format: "%.1f°", locale: .current, $0) } ?? "—")
+            dong("Per frame", "\(live.inferenceMs) ms")
         }
         .padding(8)
         .frame(maxWidth: 220)

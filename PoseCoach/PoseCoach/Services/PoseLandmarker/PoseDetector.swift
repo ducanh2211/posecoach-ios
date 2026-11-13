@@ -76,6 +76,12 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
 
     /// Thời điểm gửi khung đi, để tính thời gian nhận diện khi kết quả quay về.
     private var sentAtMs: Int64 = 0
+    /// Đã gửi một khung và CHƯA có kết quả. Nằm sau `statsLock` (callback ghi, luồng camera đọc).
+    private var dangChoKetQua = false
+
+    /// Chờ kết quả quá mức này thì thôi chờ, gửi khung mới — phòng trường hợp MediaPipe bỏ khung mà không gọi callback,
+    /// nhận diện sẽ đứng hẳn. Không phải ngưỡng hướng dẫn: chỉ là chốt an toàn, bình thường kết quả về sau vài chục ms.
+    private static let choKetQuaToiDaMs: Int64 = 1_000
     /// LIVE_STREAM đòi mốc thời gian TĂNG NGHIÊM NGẶT; hai khung cùng một ms làm MediaPipe báo lỗi.
     private var lastSentTimestamp: Int64 = 0
 
@@ -124,6 +130,7 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
             landmarker = created
             lastSentTimestamp = 0
             lock.unlock()
+            statsLock.withLock { dangChoKetQua = false }
         } catch {
             Self.log.error("Không khởi tạo được bộ nhận diện: \(error.localizedDescription, privacy: .public)")
             onError(uiText("detector_err_load", .string(error.localizedDescription)))
@@ -145,6 +152,12 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
     func detect(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation, maxLongSide: Int? = nil) {
         // Kiểm nhanh trước khi làm việc nặng.
         if !isReady { return }
+        // Khung trước chưa có kết quả thì bỏ khung này NGAY, trước bước xoay / thu nhỏ. Nhịp nhận diện KHÔNG đổi:
+        // LIVE_STREAM vốn tự vứt khung tới lúc đang bận (FlowLimiter) — chỉ là trước đây vứt SAU khi đã tốn công dựng ảnh.
+        let dangCho = statsLock.withLock {
+            dangChoKetQua && Self.uptimeMs() - sentAtMs < Self.choKetQuaToiDaMs
+        }
+        if dangCho { return }
 
         let image: MPImage
         do {
@@ -176,12 +189,14 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
         lastInputHeight = Int(image.height)
         lastOrientation = orientation
         sentAtMs = ts
+        dangChoKetQua = true
         statsLock.unlock()
 
         do {
             try lm.detectAsync(image: image, timestampInMilliseconds: Int(ts))
         } catch {
             Self.log.error("detectAsync lỗi: \(error.localizedDescription, privacy: .public)")
+            statsLock.withLock { dangChoKetQua = false }
         }
     }
 
@@ -193,6 +208,8 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
         timestampInMilliseconds: Int,
         error: Error?
     ) {
+        // Có kết quả (kể cả lỗi) — khung kế tiếp được gửi.
+        statsLock.withLock { dangChoKetQua = false }
         // Như `setErrorListener` của Kotlin: lời lỗi gốc của thư viện, không có thì câu "lỗi không rõ".
         if let error {
             let msg = error.localizedDescription

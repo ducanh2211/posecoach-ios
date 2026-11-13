@@ -25,6 +25,8 @@ import PoseDomain
     private static let faceToiDaMs: Int64 = 600
 
     private(set) var state = CaptureUiState()
+    /// Phần đổi theo từng khung nhận diện — tách khỏi `state` để không vẽ lại cả màn mỗi khung (xem `CaptureLiveState`).
+    private(set) var live = CaptureLiveState()
     private(set) var permission: CameraPermission.Status = CameraPermission.status
 
     /// Ảnh mẫu đã qua cổng kiểm.
@@ -338,7 +340,7 @@ import PoseDomain
             case .cho:
                 if s.countdown != nil { state.countdown = nil }
             case let .dem(con):
-                state.countdown = con
+                datNeuKhac(\.countdown, con)
             case .chup:
                 state.countdown = nil
                 shoot()
@@ -428,36 +430,46 @@ import PoseDomain
             zoomMin: zoomMin
         )
 
-        state.pose = frame
-        state.personDetected = detected
-        state.visiblePoints = frame.visibility.filter { $0 >= minVisibility }.count
-        state.bodyYawDeg = detected ? frame.bodyYawDeg(minVisibility) : nil
+        // ⚠️ Phần đổi theo từng khung ghi vào `live` MỘT lần. Phần thuộc `state` chỉ ghi khi giá trị ĐỔI: ghi đè đúng giá
+        // trị cũ cũng làm SwiftUI vẽ lại mọi view đọc `state` — cả màn hình, 20-30 lần/giây.
+        var l = CaptureLiveState()
+        l.pose = frame
+        l.visiblePoints = frame.visibility.filter { $0 >= minVisibility }.count
+        l.bodyYawDeg = detected ? frame.bodyYawDeg(minVisibility) : nil
         // Chỉ hiện để theo dõi. KHÔNG dùng làm mốc đo — mốc đo luôn là lớp khung hình của ảnh mẫu.
-        state.liveFraming = detected ? FramingClass.detect(frame, minVisibility) : nil
-        state.inferenceMs = stats.inferenceTimeMs
-        state.frameWidth = rongCat
-        state.frameHeight = caoCat
-        state.criteria = result?.statuses ?? []
-        state.cue = result?.cue
-        state.cueForModel = result?.cueForModel == true
-        state.prepWarning = prep
-        state.readyToCapture = result?.readyToCapture ?? false
-        state.matchPercent = result?.matchPercent
-        state.readyToPose = result?.readyToPose == true
-        state.almost = result?.almost == true
+        l.liveFraming = detected ? FramingClass.detect(frame, minVisibility) : nil
+        l.inferenceMs = stats.inferenceTimeMs
+        l.frameWidth = rongCat
+        l.frameHeight = caoCat
+        l.criteria = result?.statuses ?? []
+        l.matchPercent = result?.matchPercent
         // Cùng lớp khung hình của ẢNH MẪU — live không tự chọn mốc.
-        state.mocLive = (detected && profile != nil) ? Measurer.mocLuoi(frame, profile!.framing, minVisibility) : nil
-        state.denBoCuc = result?.denBoCuc == true
-        state.stableForMs = result?.stableForMs ?? 0
+        l.mocLive = (detected && profile != nil) ? Measurer.mocLuoi(frame, profile!.framing, minVisibility) : nil
+        l.stableForMs = result?.stableForMs ?? 0
         #if DEBUG
-        state.debugGocMay = Self.debugGocMay(devicePitchDeg.map { mode.camTruoc ? -$0 : $0 })
-        state.debugDo = Self.debugDo(profile?.measurement, live, vFovDeg)
-        state.debugChiTiet = Self.debugChiTiet(
+        l.debugGocMay = Self.debugGocMay(devicePitchDeg.map { mode.camTruoc ? -$0 : $0 })
+        l.debugDo = Self.debugDo(profile?.measurement, live, vFovDeg)
+        l.debugChiTiet = Self.debugChiTiet(
             inW: rong, inH: cao, cropW: rongCat, cropH: caoCat, zoom: state.zoomRatio,
-            visible: state.visiblePoints, ms: stats.inferenceTimeMs, deviceRoll: deviceRollDeg,
-            t: profile?.measurement, l: live, statuses: state.criteria
+            visible: l.visiblePoints, ms: stats.inferenceTimeMs, deviceRoll: deviceRollDeg,
+            t: profile?.measurement, l: live, statuses: l.criteria
         )
         #endif
+        self.live = l
+
+        datNeuKhac(\.personDetected, detected)
+        datNeuKhac(\.cue, result?.cue)
+        datNeuKhac(\.cueForModel, result?.cueForModel == true)
+        datNeuKhac(\.prepWarning, prep)
+        datNeuKhac(\.readyToCapture, result?.readyToCapture ?? false)
+        datNeuKhac(\.readyToPose, result?.readyToPose == true)
+        datNeuKhac(\.almost, result?.almost == true)
+        datNeuKhac(\.denBoCuc, result?.denBoCuc == true)
+    }
+
+    /// Ghi một trường của `state` CHỈ KHI giá trị đổi — xem chú thích cuối `onLiveFrame`.
+    private func datNeuKhac<T: Equatable>(_ truong: WritableKeyPath<CaptureUiState, T>, _ giaTri: T) {
+        if state[keyPath: truong] != giaTri { state[keyPath: truong] = giaTri }
     }
 
     // MARK: - Chụp / quay

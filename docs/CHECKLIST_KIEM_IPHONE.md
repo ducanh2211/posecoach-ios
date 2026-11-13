@@ -139,6 +139,14 @@ Làm SAU khi các mục A–F đạt. Máy sàn chưa chốt (D3 — đề xuấ
 - [ ] Trễ câu hướng dẫn: quay màn hình 120 fps, di máy đột ngột → đếm khung tới lúc câu đổi. Đạt: **< 350 ms**
 - [ ] Chấm điểm sau quay: video 15 s → thời gian từ lúc dừng tới màn xem lại (Spike Q2: ≤ 5 s); burst 8 tấm
 - [ ] Ghi `thermalState` nếu thấy máy nóng (Implementation_Guide §6 — iOS có, Android không; **chỉ báo, không port**)
+- [ ] Sau bản giảm nóng 13/11/2026 (chờ kết quả rồi mới gửi khung · luồng camera YUV · tách `CaptureLiveState`), chạy
+  bản **Release**:
+  - Màn chụp 5 phút, cả chụp liên tục lẫn video: máy ấm ít hơn bản trước. Khung xương vẫn bám người, **không đứng hình**
+    (nếu đứng: chốt `choKetQuaToiDaMs` 1 s ở `PoseDetector` đang cứu — tức MediaPipe có bỏ callback, báo lại)
+  - "Per frame … ms" giờ là thời gian thật của một lần nhận diện (trước đó báo thấp vì mốc gửi bị khung sau ghi đè) —
+    đừng so trực tiếp với số cũ / số Android
+  - Quay video 15 s → màn xem lại có ảnh, màu ảnh cắt từ video bình thường (luồng camera đổi sang YUV `420f`)
+  - Danh sách tiêu chí, % giống, mốc lưới, câu nhắc, đếm ngược tự động vẫn cập nhật như trước
 
 ### 6d — rủi ro #1: mẫu xoay đủ vòng
 - [ ] Mẫu xoay chậm 360° trước camera (hoặc phát video người xoay trên màn hình khác, KHÔNG tua): khung xương có bám

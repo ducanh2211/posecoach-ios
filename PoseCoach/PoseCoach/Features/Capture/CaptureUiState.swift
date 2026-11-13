@@ -4,18 +4,13 @@ import PoseDomain
 
 /// Trạng thái màn chụp. Port `KT/capture/CaptureUiState.kt`.
 ///
-/// Khác Android: `debugDo`, `debugGocMay` (code `⚠️ TẠM`, D7) chỉ có ở bản Debug, kèm `debugChiTiet` riêng iOS —
-/// xem `CaptureViewModel+Debug`.
+/// Khác Android:
+/// - Các trường đổi theo TỪNG KHUNG nhận diện (`pose`, `criteria`, `matchPercent`, `mocLive`, cỡ khung, số debug…) nằm ở
+///   `CaptureLiveState` — xem lý do ở đó.
+/// - `debugDo`, `debugGocMay` (code `⚠️ TẠM`, D7) chỉ có ở bản Debug, kèm `debugChiTiet` riêng iOS — xem
+///   `CaptureViewModel+Debug`.
 struct CaptureUiState {
 
-    #if DEBUG
-    var debugGocMay: String?
-    var debugDo: String?
-    var debugChiTiet: String?
-    #endif
-
-    /// Độ giống ảnh mẫu ngay lúc này, 0..100. `nil` = chưa đo được.
-    var matchPercent: Int?
     /// Đã đủ giống để chuẩn bị tạo dáng và bấm quay.
     var readyToPose = false
     /// Các mục đang làm dở đều đã lệch ít — mới được nói "gần đúng".
@@ -23,8 +18,6 @@ struct CaptureUiState {
 
     /// Mốc đặt người của ẢNH MẪU trên lưới — tính một lần khi phân tích ảnh mẫu.
     var mocMau: MocLuoi?
-    /// Mốc đặt người của khung camera hiện tại.
-    var mocLive: MocLuoi?
     /// Đã xong các bước góc máy — tới lượt hiện mốc trên lưới (FOOTGUNS 110).
     var denBoCuc = false
 
@@ -44,8 +37,6 @@ struct CaptureUiState {
     var analyzingTemplate = true
     /// Ảnh mẫu này sẽ được chấm theo những tiêu chí nào, và bỏ qua gì vì sao.
     var criteriaSummary: [UiText] = []
-    /// TRẠNG THÁI SỐNG của từng tiêu chí — nguồn duy nhất để vẽ danh sách dấu tích.
-    var criteria: [CriterionStatus] = []
     /// Ảnh mẫu dọc hay ngang. `nil` = chưa biết.
     var templatePortrait: Bool?
 
@@ -56,15 +47,7 @@ struct CaptureUiState {
     var liveDetectionActive = true
 
     // --- Nhận diện thời gian thực ---
-    var pose: PoseFrame = .empty
     var personDetected = false
-    var visiblePoints = 0
-    var bodyYawDeg: Double?
-    var liveFraming: FramingClass?
-    var inferenceMs: Int64 = 0
-    /// Cỡ khung đã cắt theo tỉ lệ khung — khung xương vẽ theo cỡ này.
-    var frameWidth = 0
-    var frameHeight = 0
 
     // --- Engine hướng dẫn ---
     /// Câu nhắc đang hiện. Mỗi lúc đúng MỘT câu. `nil` = không nhắc gì.
@@ -75,8 +58,6 @@ struct CaptureUiState {
     var cueForModel = false
     /// Đủ điều kiện để bấm quay chưa.
     var readyToCapture = false
-    /// Đã giữ ổn định được bao lâu, mili giây.
-    var stableForMs: Int64 = 0
     var devicePortrait = true
     /// Mức zoom hiện tại. 1,0 = tiêu cự gốc.
     var zoomRatio: Float = 1

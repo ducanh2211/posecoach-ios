@@ -372,7 +372,12 @@ nonisolated final class CaptureController: NSObject, @unchecked Sendable {
         }
 
         // Luồng khung hình: nuôi nhận diện, và ghi video ở chế độ `video`.
-        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+        // YUV — định dạng GỐC của cảm biến: phần cứng khỏi đổi cả khung lớn sang BGRA 30 lần/giây, bộ nén video nhận
+        // thẳng. Khung đưa vào nhận diện vẫn là BGRA: `UprightPixelBuffer` đổi lúc xoay, ở cỡ đã thu nhỏ (như CameraX
+        // đổi YUV → RGBA cho `ImageAnalysis`).
+        let yuv = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        let pixelFormat = videoOutput.availableVideoPixelFormatTypes.contains(yuv) ? yuv : kCVPixelFormatType_32BGRA
+        videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: pixelFormat]
         // Bận thì VỨT khung mới, không xếp hàng — hướng dẫn trễ 1 giây tệ hơn hướng dẫn thưa (`KEEP_ONLY_LATEST`).
         videoOutput.alwaysDiscardsLateVideoFrames = true
         let videoOk = session.canAddOutput(videoOutput)
