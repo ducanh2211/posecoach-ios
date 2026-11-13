@@ -449,6 +449,15 @@ import PoseDomain
         state.mocLive = (detected && profile != nil) ? Measurer.mocLuoi(frame, profile!.framing, minVisibility) : nil
         state.denBoCuc = result?.denBoCuc == true
         state.stableForMs = result?.stableForMs ?? 0
+        #if DEBUG
+        state.debugGocMay = Self.debugGocMay(devicePitchDeg.map { mode.camTruoc ? -$0 : $0 })
+        state.debugDo = Self.debugDo(profile?.measurement, live, vFovDeg)
+        state.debugChiTiet = Self.debugChiTiet(
+            inW: rong, inH: cao, cropW: rongCat, cropH: caoCat, zoom: state.zoomRatio,
+            visible: state.visiblePoints, ms: stats.inferenceTimeMs, deviceRoll: deviceRollDeg,
+            t: profile?.measurement, l: live, statuses: state.criteria
+        )
+        #endif
     }
 
     // MARK: - Chụp / quay

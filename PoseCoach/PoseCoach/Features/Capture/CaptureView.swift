@@ -165,6 +165,9 @@ struct CaptureView: View {
                 ZoomBar(current: s.zoomRatio, range: vm.zoomRange, dangChum: zoomChum != nil) { vm.setZoom($0) }
                     .padding(.bottom, 12)
             }
+            #if DEBUG
+            debugSoDo(s)
+            #endif
             if let e = s.templateError { loi(e) }
             if let e = s.cameraError { loi(e) }
 
@@ -215,6 +218,29 @@ struct CaptureView: View {
             .foregroundStyle(Color(argb: 0xFFFF8A80))
             .padding(.horizontal, 20).padding(.vertical, 4)
     }
+
+    #if DEBUG
+    /// Số đo thô để đối chiếu với Android — chỉ bản Debug. Hai dòng đầu y như `CaptureScreen.kt:719–741`.
+    @ViewBuilder
+    private func debugSoDo(_ s: CaptureUiState) -> some View {
+        if let g = s.debugGocMay {
+            Text(verbatim: g)
+                .font(.system(size: 13, weight: .bold).monospaced())
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 10).padding(.vertical, 4)
+                .background(Color(argb: 0x99000000), in: RoundedRectangle(cornerRadius: 8))
+                .padding(.bottom, 4)
+        }
+        ForEach([s.debugDo, s.debugChiTiet].compactMap { $0 }, id: \.self) { d in
+            Text(verbatim: d)
+                .font(.system(size: 10).monospaced())
+                .foregroundStyle(Color(argb: 0xCCFFFFFF))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12).padding(.vertical, 2)
+        }
+    }
+    #endif
 
     private var permissionNotice: some View {
         VStack(spacing: 12) {

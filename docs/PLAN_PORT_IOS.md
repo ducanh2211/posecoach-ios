@@ -80,7 +80,7 @@ tay che mặt, khoá chủ thể nhiều người, trạng thái `ACQUIRING`.
 | D4 | Chọn ngôn ngữ trong app hay dùng ngôn ngữ riêng từng app của iOS? | ✅ **Chốt 12/11/2026: của hệ thống** — Settings chỉ có dòng mở Cài đặt, bỏ `LanguageRepository` + `AppLanguageTest` | — |
 | D5 | Thư viện tải ảnh cho lưới ảnh mẫu (Android dùng Coil) | **Không thêm** — ImageIO thumbnail + `NSCache` | Phase 4 |
 | D6 | Dữ liệu đối chiếu từ Android (JSON số đo cho cùng bộ ảnh) | Nhờ bên Android thêm lệnh xuất — **định dạng đã chốt bên iOS: `tools/so-sanh-parity/README.md`** (12/11/2026) | 6a |
-| D7 | Code đánh dấu `⚠️ TẠM` bên Android: GeoCalib chạy trên màn chụp (`CaptureScreen.kt:335`, `CaptureViewModel.kt:212`) + `debugDo` / `debugGocMay` (`CaptureViewModel.kt:388–455`) | **Không port** — tài liệu ghi phải gỡ trước khi phát hành | Phase 4 |
+| D7 | Code đánh dấu `⚠️ TẠM` bên Android: GeoCalib chạy trên màn chụp (`CaptureScreen.kt:335`, `CaptureViewModel.kt:212`) + `debugDo` / `debugGocMay` (`CaptureViewModel.kt:388–455`) | **Không port** — tài liệu ghi phải gỡ trước khi phát hành. Ngoại lệ (người dùng chốt 13/11/2026): `debugGocMay` + `debugDo` port đúng định dạng, kèm `debugChiTiet` riêng iOS, **chỉ trong `#if DEBUG`** (`CaptureViewModel+Debug.swift`) để đối chiếu máy thật — bản Release không có | Phase 4 |
 | D8 | Ngưỡng nằm ngoài `GuidanceConfig` (`NhanDienNhap.kt`: `nhomGoc` ±15°, `CACH_MOC_GOC = 4`, nhãn ML Kit 0,2 / 0,5; hằng số trong `CaptureScreen.kt`) | Port **đúng chỗ Android đặt** để đối chiếu được; ghi danh sách ở bước port | Phase 4 |
 
 ---

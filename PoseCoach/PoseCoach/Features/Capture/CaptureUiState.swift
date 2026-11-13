@@ -4,8 +4,15 @@ import PoseDomain
 
 /// Trạng thái màn chụp. Port `KT/capture/CaptureUiState.kt`.
 ///
-/// Khác Android: **bỏ** `debugDo`, `debugGocMay` (code `⚠️ TẠM`, D7).
+/// Khác Android: `debugDo`, `debugGocMay` (code `⚠️ TẠM`, D7) chỉ có ở bản Debug, kèm `debugChiTiet` riêng iOS —
+/// xem `CaptureViewModel+Debug`.
 struct CaptureUiState {
+
+    #if DEBUG
+    var debugGocMay: String?
+    var debugDo: String?
+    var debugChiTiet: String?
+    #endif
 
     /// Độ giống ảnh mẫu ngay lúc này, 0..100. `nil` = chưa đo được.
     var matchPercent: Int?
