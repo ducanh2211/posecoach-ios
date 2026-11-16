@@ -225,6 +225,78 @@ Ba commit cần kiểm, so với **bản gốc `9a0716b`** (trước khi sửa):
 | | `9a0716b` | Video | | | | | — |
 | | mới | Video | | | | | — |
 
+### 6c++ — tìm nguyên nhân nóng (16/11/2026)
+
+Sau 6c+ máy vẫn nóng tới mức **iOS tự giảm sáng màn** (đo bằng Debug). Mục này tách từng nguyên nhân nghi ngờ, không sửa
+code. ⚠️ Team tính **bỏ tính năng Video, chỉ giữ Chụp liên tục** (16/11/2026) → cấu hình chính là **Chụp**; Video chỉ còn
+1 lượt để so. Thước đo chính: **số phút tới lúc màn tự giảm sáng** (bấm đồng hồ bấm giờ). Thước đo phụ: **% pin tụt sau 10 phút**.
+
+**Điều kiện chung mọi lượt:** **rút cáp** (sạc làm nóng và che mất % pin tụt — mục này không cần Xcode lúc đo), pin > 50 %,
+bỏ ốp, độ sáng cố định khoảng 70 %, tắt Tự động chỉnh độ sáng (Cài đặt → Trợ năng → Màn hình & Cỡ chữ), cùng phòng.
+Trước mỗi lượt để máy nguội **≥ 10 phút**. Cảnh cố định như 6c+ (người đứng ~2 m, máy tựa chắc). Mỗi lượt **tối đa 10
+phút**: giảm sáng sớm hơn thì dừng ở đó, ghi số phút.
+
+**0. Lấy số Per frame (1 phút mỗi máy)** — giả thuyết: iPhone nhận diện nhanh hơn nên chạy NHIỀU lượt hơn mỗi giây
+- [ ] iPhone: màn chụp, camera sau, chế độ **Chụp**, người trong khung → bấm dòng trạng thái góc trên trái → ghi
+  "Per frame" sau 30 giây (lấy số hay gặp nhất)
+- [ ] Android: cùng cảnh → ghi "Per frame". ⚠️ Số Android báo **thấp hơn** thực tế (xem 6c+ mục 2), nên Android
+  mà vẫn ra số lớn hơn iPhone thì kết luận càng chắc
+- Số lượt mỗi giây ≈ 1000 / (ms + 16), tối đa 30
+
+**1. Mốc tham chiếu: app Camera của Apple**
+- [ ] App Camera, chế độ **Ảnh**, không bấm chụp, để yên 10 phút. Có giảm sáng không, phút thứ mấy, pin tụt bao nhiêu %
+- Camera của Apple mà cũng giảm sáng ⇒ máy này vốn chịu nóng kém khi mở camera, app mình chỉ cộng thêm
+
+**2. PoseCoach bản Release** — so với lần test Debug trước
+- [ ] Đổi Build Configuration = Release (cách ở 6c+), cài lên máy, rút cáp. Mở app từ màn hình chính (không chạy từ Xcode)
+- [ ] Camera sau, chế độ **Chụp** (không bấm chụp), người trong khung, 10 phút → số phút tới lúc giảm sáng, % pin tụt
+- Lâu hơn Debug rõ rệt ⇒ một phần nóng là do Debug (code Swift không tối ưu + debugger gắn vào)
+
+**3. Release, chế độ Video (chỉ để so)** — giả thuyết: đường chụp ảnh (preset `.photo`, ưu tiên chất lượng, zero shutter
+lag giữ vòng đệm ảnh full độ phân giải) tốn hơn đường video 1080p
+- [ ] Như lượt 2 nhưng chip "Video", không bấm quay
+
+**4. Release, camera TRƯỚC, chế độ Chụp** — giả thuyết: camera sau nhiều ống chạy 2 cảm biến cùng lúc
+- [ ] Như lượt 2 nhưng xoay sang camera trước (camera trước chỉ có 1 cảm biến)
+
+**5. Android, cùng điều kiện như lượt 2** (bản Debug cũng được — MediaPipe là thư viện đã biên dịch sẵn, Debug không làm nó chậm đi)
+- [ ] Màn chụp, camera sau, chế độ **Chụp**, 10 phút → máy có tự giảm sáng / báo nóng không, % pin tụt, sờ lưng máy
+
+**6. (Nếu có) Instruments → Power Profiler** — template có từ Xcode 26, cần iPhone chạy iOS 26
+- [ ] Cắm cáp, Release, Xcode → Product → Profile (⌘I) → **Power Profiler** → ghi 3 phút ở cấu hình lượt 2 → chụp màn
+  hình các dải CPU / GPU / Camera / Display. Biết ngay phần nào tốn điện nhất
+
+**Bảng ghi kết quả**
+
+| Lượt | Máy / OS | Cấu hình | Per frame ms | Phút tới lúc giảm sáng (— = không) | % pin tụt / 10 phút | Sờ lưng phút 10 |
+|---|---|---|---|---|---|---|
+| 0 | iPhone | Debug, sau, Chụp | | — | — | — |
+| 0 | Android | Debug, sau, Chụp | | — | — | — |
+| 1 | iPhone | App Camera Apple, Ảnh | — | | | |
+| 2 | iPhone | Release, sau, Chụp | | | | |
+| 3 | iPhone | Release, sau, Video (so) | | | | |
+| 4 | iPhone | Release, trước, Chụp | | | | |
+| 5 | Android | sau, Chụp | | | | |
+
+Đã đo 16/11/2026 (14 Pro, iOS 27.2.1, trong nhà): app Camera Apple chế độ Ảnh **4 %** / 5 phút; PoseCoach Release, Chụp,
+camera sau **7 %** / 5 phút. Không giảm sáng. Lần giảm sáng trước: ngoài trời, nắng chiếu màn liên tục.
+
+**7. Bản giới hạn ~15 lần nhận diện/giây** (`PoseDetector.nhipGuiToiThieuMs = 60`) — Release, Chụp, camera sau
+- [ ] 5 phút, cùng điều kiện như lần đo 7 % → % pin tụt. Đạt: thấp hơn 7 % rõ (mong khoảng 5–6 %)
+- [ ] "Per frame … ms" không tăng so với trước (chỉ số lần mỗi giây giảm, mỗi lần không chậm đi)
+- [ ] Khung xương vẫn bám người khi đi lại / giơ tay — giật hơn một chút là bình thường, **trễ rõ** (> ~0,3 s) thì báo
+- [ ] Câu hướng dẫn, dấu tích, % giống, đếm ngược Tự động vẫn chạy như cũ; người bước vào khung → câu đầu tiên hiện
+  gần như ngay
+- [ ] (Nếu có dịp) ngoài trời 10 phút: có giảm sáng không, phút thứ mấy — so với lần trước
+
+**Đọc kết quả** (gửi lại bảng để chốt hướng sửa):
+- Lượt 1 cũng giảm sáng ⇒ phần lớn do máy; chỉ giảm được bằng cách bớt việc (giới hạn số lượt nhận diện mỗi giây)
+- Lượt 2 lâu hơn hẳn lần Debug ⇒ đo / đánh giá nóng luôn bằng Release, không cần sửa gì thêm cho phần này
+- iPhone Per frame nhỏ hơn Android rõ (lượt 0) ⇒ giới hạn ~15 lượt/giây (cần duyệt, Android làm cùng)
+- Lượt 2 (Chụp) nóng hơn lượt 3 (Video) rõ ⇒ thủ phạm ở đường chụp ảnh: thử tắt zero shutter lag / hạ mức ưu tiên
+  chất lượng lúc chờ, chỉ bật lúc bấm (đổi lại: ảnh trễ hơn lúc bấm)
+- Lượt 4 mát hơn lượt 2 rõ ⇒ khoá camera nhiều ống chỉ dùng 1 cảm biến ở 1x
+
 ### 6d — rủi ro #1: mẫu xoay đủ vòng
 - [ ] Mẫu xoay chậm 360° trước camera (hoặc phát video người xoay trên màn hình khác, KHÔNG tua): khung xương có bám
   suốt vòng không, hướng mẫu (mục 1) đổi đúng lúc quay lưng / quay mặt. Android: 280/280 khung giữ được. Đếm khung mất

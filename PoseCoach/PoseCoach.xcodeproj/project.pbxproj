@@ -49,22 +49,16 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		57FE5B5E30A41C1A00257BCC /* PoseCoach */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = PoseCoach;
 			sourceTree = "<group>";
 		};
 		57FE5B6C30A41C1C00257BCC /* PoseCoachTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = PoseCoachTests;
 			sourceTree = "<group>";
 		};
 		57FE5B7630A41C1C00257BCC /* PoseCoachUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = PoseCoachUITests;
 			sourceTree = "<group>";
 		};
@@ -254,7 +248,7 @@
 			mainGroup = 57FE5B5330A41C1A00257BCC;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B91A9055795731946E606792 /* XCLocalSwiftPackageReference "PoseDomain" */,
+				B91A9055795731946E606792 /* XCLocalSwiftPackageReference "Packages/PoseDomain" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 57FE5B5D30A41C1A00257BCC /* Products */;
@@ -323,9 +317,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -340,9 +338,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach/Pods-PoseCoach-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -379,9 +381,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -418,9 +424,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-PoseCoach-PoseCoachUITests/Pods-PoseCoach-PoseCoachUITests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -796,7 +806,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		B91A9055795731946E606792 /* XCLocalSwiftPackageReference "PoseDomain" */ = {
+		B91A9055795731946E606792 /* XCLocalSwiftPackageReference "Packages/PoseDomain" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/PoseDomain;
 		};
@@ -805,7 +815,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		A2D833937947F648DD7E6943 /* PoseDomain */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B91A9055795731946E606792 /* XCLocalSwiftPackageReference "PoseDomain" */;
+			package = B91A9055795731946E606792 /* XCLocalSwiftPackageReference "Packages/PoseDomain" */;
 			productName = PoseDomain;
 		};
 /* End XCSwiftPackageProductDependency section */

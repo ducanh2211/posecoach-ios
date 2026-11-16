@@ -82,6 +82,12 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
     /// Chờ kết quả quá mức này thì thôi chờ, gửi khung mới — phòng trường hợp MediaPipe bỏ khung mà không gọi callback,
     /// nhận diện sẽ đứng hẳn. Không phải ngưỡng hướng dẫn: chỉ là chốt an toàn, bình thường kết quả về sau vài chục ms.
     private static let choKetQuaToiDaMs: Int64 = 1_000
+    /// Hai lần gửi cách nhau ít nhất chừng này → ~15 lần nhận diện/giây với camera 30 fps (khung tới mỗi ~33 ms: bỏ một,
+    /// gửi một). Riêng iOS: iPhone nhận diện xong trong ~20 ms nên "có kết quả mới gửi" vẫn chạy đủ 30 lần/giây, CPU không
+    /// lúc nào nghỉ — đo 16/11/2026 (14 Pro, Release, Chụp, 5 phút): PoseCoach tụt 7 % pin, app Camera 4 %. Logic hướng
+    /// dẫn tính theo ms nên không đổi; riêng `minValidFrames` (3 khung) chờ ~200 ms thay vì ~100 ms.
+    /// Để 60 chứ không 66: khung tới lệch vài ms thì vẫn qua, không tụt xuống 10 lần/giây.
+    private static let nhipGuiToiThieuMs: Int64 = 60
     /// LIVE_STREAM đòi mốc thời gian TĂNG NGHIÊM NGẶT; hai khung cùng một ms làm MediaPipe báo lỗi.
     private var lastSentTimestamp: Int64 = 0
 
@@ -152,12 +158,13 @@ nonisolated final class PoseDetector: NSObject, PoseLandmarkerLiveStreamDelegate
     func detect(_ sampleBuffer: CMSampleBuffer, orientation: UIImage.Orientation, maxLongSide: Int? = nil) {
         // Kiểm nhanh trước khi làm việc nặng.
         if !isReady { return }
-        // Khung trước chưa có kết quả thì bỏ khung này NGAY, trước bước xoay / thu nhỏ. Nhịp nhận diện KHÔNG đổi:
-        // LIVE_STREAM vốn tự vứt khung tới lúc đang bận (FlowLimiter) — chỉ là trước đây vứt SAU khi đã tốn công dựng ảnh.
-        let dangCho = statsLock.withLock {
-            dangChoKetQua && Self.uptimeMs() - sentAtMs < Self.choKetQuaToiDaMs
+        // Bỏ khung NGAY, trước bước xoay / thu nhỏ, khi: chưa tới nhịp (`nhipGuiToiThieuMs`), hoặc khung trước chưa có
+        // kết quả (LIVE_STREAM vốn tự vứt khung tới lúc đang bận — FlowLimiter — nhưng vứt SAU khi đã tốn công dựng ảnh).
+        let boQua = statsLock.withLock {
+            let quaMs = Self.uptimeMs() - sentAtMs
+            return quaMs < Self.nhipGuiToiThieuMs || (dangChoKetQua && quaMs < Self.choKetQuaToiDaMs)
         }
-        if dangCho { return }
+        if boQua { return }
 
         let image: MPImage
         do {
