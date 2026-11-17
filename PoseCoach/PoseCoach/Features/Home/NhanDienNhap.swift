@@ -53,10 +53,16 @@ nonisolated func nhanDienNhap(_ file: URL, _ tienDo: TienDo = { _, _, _ in }) ->
     let pt = phanTichAnhMau(file)
     var bmp: CGImage?
     if case .accepted = pt.verdict { bmp = UprightImage.decode(file) }
-    tienDo(0.35, 0.45, 600)
-    let nhan = bmp.map { ImageLabels.of($0) } ?? [:]
-    tienDo(0.45, 0.97, 4000)
-    let geo = bmp.flatMap { GeoCalibGocMay.phanTich($0) }
+    // Gắn nhãn (ML Kit) và GeoCalib (ONNX) độc lập nhau, chạy SONG SONG — khác Kotlin (chạy nối tiếp), kết quả y hệt.
+    // Không đụng `MLKitLock`: GeoCalib không phải ML Kit. Thời gian ≈ GeoCalib (bước dài hơn).
+    tienDo(0.35, 0.97, 4000)
+    var nhan: [String: Float] = [:]
+    var geo: GeoCalibGocMay.KetQua?
+    if let bmp {
+        DispatchQueue.concurrentPerform(iterations: 2) { i in
+            if i == 0 { nhan = ImageLabels.of(bmp) } else { geo = GeoCalibGocMay.phanTich(bmp) }
+        }
+    }
 
     let dienThoai = nhan["Mobile phone"] ?? 0
     let selfie = nhan["Selfie"] ?? 0

@@ -27,7 +27,8 @@ struct HomeFlowTests {
         return dest
     }
 
-    /// Nhận diện chạy trọn: qua cổng kiểm, báo tiến độ đủ bốn bước liền nhau, đoán được góc máy.
+    /// Nhận diện chạy trọn: qua cổng kiểm, báo tiến độ đủ ba bước liền nhau (gắn nhãn + GeoCalib chung một bước vì chạy
+    /// song song), đoán được góc máy.
     @Test func nhanDienAnhCaiSan() async throws {
         let f = try anhNhapTam("ngang-di-bo-ben-ho.jpg")
         defer { try? FileManager.default.removeItem(at: f) }
@@ -37,8 +38,8 @@ struct HomeFlowTests {
             Issue.record("ảnh cài sẵn phải qua cổng kiểm")
             return
         }
-        #expect(buoc.ds.map(\.0) == [0, 0.35, 0.45, 0.97])
-        #expect(buoc.ds.map(\.1) == [0.35, 0.45, 0.97, 1])
+        #expect(buoc.ds.map(\.0) == [0, 0.35, 0.97])
+        #expect(buoc.ds.map(\.1) == [0.35, 0.97, 1])
         #expect(kq.geo != nil, "GeoCalib phải đo được ảnh ngoài trời")
         // `duChac` chỉ đúng khi mọi câu đều chắc.
         if kq.duChac { #expect(kq.kieuChac && kq.gocChac && kq.goc != nil) }

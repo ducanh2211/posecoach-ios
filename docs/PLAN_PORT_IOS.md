@@ -529,6 +529,8 @@ Test: `StringsParityTest` → mới trong `PoseCoachTests`: mọi key có `en` +
   `Services/ImageLabeling/ImageLabels` (ML Kit, ngưỡng 0,2). `TemplateProfile.thuTuHoSo` đổi sang `public`.
 - Hộp **nhận** ảnh là bảng kéo lên (nội dung dài, cần cuộn) thay `AlertDialog`; hộp **từ chối** vẫn là alert, chỉ có
   nút đóng. Nút "Tìm theo bối cảnh" chưa có — màn Scene ở Phase 5.
+- `nhanDienNhap`: ML Kit gắn nhãn và GeoCalib chạy **song song** (`concurrentPerform`), Kotlin chạy nối tiếp — kết quả
+  y hệt, nhanh hơn ~0,6 s; tiến độ còn 3 bước (17/11/2026, đề xuất A4 trong `docs/proposal/`).
 - `NhapAnhSheet` luôn nhận kết quả tự nhận diện (`truoc`): Home lúc nào cũng nhận diện trước khi mở bảng, nên nhánh tự
   phân tích lại trong bảng của Kotlin không bao giờ chạy — không port. Đổi tên file (`ganNhan`) do ViewModel làm.
 - Photo Picker của hệ thống (`preferredItemEncoding: .compatible` → JPEG), không cần xin quyền thư viện ảnh.
