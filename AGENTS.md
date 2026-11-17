@@ -217,6 +217,14 @@ xcodebuild -workspace PoseCoach.xcworkspace -scheme PoseCoach \
   Personal Team (log: `syspolicyd … Gatekeeper rejection`), không phải lỗi code. Chạy test từ terminal/VS Code
   → app thừa hưởng "nguồn gốc" của tiến trình đó → phải bật nó trong **System Settings → Privacy & Security →
   Developer Tools** rồi mở lại. Từ Xcode (⌘U) thì không bị. Xem log: `/usr/bin/log show` (zsh có lệnh `log` riêng).
+- **Crash trên iPhone thật CHỈ khi chạy từ Xcode (lldb đính kèm)** — exception dạng
+  `-[AGX…FunctionHandle/Device/CommandBuffer …]: unrecognized selector` (`resourceIndex`, `originalObject`, `logs`…),
+  lặp lại ở nhiều thread, Continue vẫn crash thread khác. Từ terminal / home screen thì không crash = **debug layer
+  Metal của Xcode** (bọc object Metal bằng `MTLDebug…` thiếu private method trên driver AGX — đã gặp trên iPhone 11
+  A13, 15/11/2026), **không phải bug app**. Tắt trong **Edit Scheme → Run**: tab Diagnostics → bỏ tick
+  **Metal API Validation**; tab Options → **GPU Frame Capture = Disabled** (đổi chỗ: GPU Capture nằm ở Options,
+  không phải Diagnostics). Mất khả năng GPU frame capture trên máy đó; lldb vẫn debug bình thường.
+  Lần sau thấy `AGX… unrecognized selector` khi debug → nhớ dấu hiệu này, đừng đi tìm bug trong code.
 - **Không để test bundle link lại pod.** MediaPipe ép `-force_load libMediaPipeTasksCommon_*_graph.a` vào mọi
   target dùng pod → test link bản thứ hai → crash `FlowLimiterCalculator already registered`. `post_install`
   trong `Podfile` xoá `OTHER_LDFLAGS` của `Pods-PoseCoachTests` — **giữ đoạn đó**; symbol lấy từ app qua `BUNDLE_LOADER`.

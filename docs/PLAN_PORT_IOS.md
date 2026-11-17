@@ -351,10 +351,6 @@ ra 🔴/🟡/🟢 — lưu bảng kết quả làm mốc cho Phase 6a.
   lời gốc `.raw`, rỗng → `detector_err_unknown`, như Kotlin); **bỏ `onFrameBitmap`** — ML Kit nhận thẳng
   `CMSampleBuffer` từ tầng camera (3b/3c). Callback kết quả dùng khoá riêng (`statsLock`), không xin khoá chính, để
   `close()` không chờ chéo với callback dở dang.
-- ⚠️ **Lệch Android có chủ ý (16/11/2026, người dùng duyệt):** `PoseDetector.nhipGuiToiThieuMs = 60` — tối đa ~15 lần
-  nhận diện/giây. Lý do: iPhone nhận diện ~20 ms nên chạy đủ 30 lần/giây, máy nóng (14 Pro, Release, 5 phút: 7 % pin so
-  với 4 % của app Camera). Ngưỡng không đổi; logic hướng dẫn tính theo ms, chỉ `minValidFrames` chờ ~200 ms thay vì
-  ~100 ms. **Báo bên Android** cân nhắc giới hạn tương tự để hai bản cùng nhịp.
 - Mọi type Services khai `nonisolated` (target app mặc định `MainActor`).
 - Ghi nhận 1 lần duy nhất `libc++abi … recursive_mutex lock failed` lúc tiến trình test thoát, khi bài LIVE xoay còn đỏ;
   không lặp lại sau khi sửa. Theo dõi tiếp ở 3b (đóng bộ nhận diện khi dừng camera — FG 11).
