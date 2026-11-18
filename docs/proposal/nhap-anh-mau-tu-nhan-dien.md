@@ -105,7 +105,8 @@ có sẵn trong app, nếu không đọc được góc, vẫn dùng ba mức nh�
 - *Người dùng:* ít bị bảo "chúc thêm, ngửa thêm" khi đã chụp giống mẫu. Ảnh chụp từ trên cao hoặc dưới thấp có lại
   hướng dẫn lùi/tiến.
 - *Sản phẩm:* bảng xác nhận lúc nhập ảnh đổi từ "chọn 1 trong 3 mức" sang "app đo được chúc khoảng X°, đúng không?".
-  Cần thêm một chỗ lưu số đo đi kèm ảnh mẫu.
+  Cần thêm một chỗ lưu số đo đi kèm ảnh mẫu. Tài liệu [gợi ý ảnh mẫu theo bối cảnh](goi-y-boi-canh-bo-cuc.md) (đề
+  xuất 3) cũng thêm tệp dữ liệu đi kèm ảnh mẫu, nên dùng chung **một** tệp để ảnh mẫu cũ chỉ phải chuyển đổi một lần.
 - *Hướng dẫn khi chụp:* khi số đo phía ảnh mẫu chính xác hơn, có thể siết lại khoảng sai cho phép của hai mục góc máy.
   Hiện hai mục này đang được nới rộng chính vì phía ảnh mẫu kém chính xác. Cần đo trên máy thật trước khi siết.
 - *Android:* làm trước, cùng cách lưu.
@@ -171,7 +172,9 @@ lần lượt.
 | 7 | Trong thư viện, nhấn giữ ảnh đã nhập để sửa thông tin | Không sửa được sau khi lưu (giới hạn 5) |
 | 8 | Nhắc khi chuyển sang camera sau với ảnh mẫu selfie | Hướng dẫn khoảng cách không hợp (giới hạn 6) |
 
-Hoãn vì app đang ở giai đoạn phát triển và kiểm tính năng, chưa tối ưu trải nghiệm.
+Hoãn vì app đang ở giai đoạn phát triển và kiểm tính năng, chưa tối ưu trải nghiệm. (Thao tác "chạm để kiểm lại"
+trong tài liệu [hướng dẫn bị kẹt và lặp lại](huong-dan-ket-va-vong-lap.md) không thuộc nhóm này: đó là lối thoát khỏi
+lỗi bị kẹt, nên làm ngay.)
 
 **Lưu ý cho người test:** khi chưa có đề xuất 6, nếu thấy hướng dẫn sai thì khó biết là do app *đoán sai thông tin
 ảnh* hay do *phần hướng dẫn lúc chụp sai*. Cách tạm: xem tên của ảnh sau khi nhập. Thông tin app đã gán nằm ngay trong
